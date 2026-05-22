@@ -55,3 +55,15 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Vector store data
+data/
+
+# IDE
+.idea/
+.vs/
+*.user
+*.suo
+
+# macOS
+.DS_Store
