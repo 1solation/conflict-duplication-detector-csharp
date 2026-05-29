@@ -94,14 +94,16 @@ Respond in JSON format:
                         DocumentId = chunk.DocumentId,
                         FileName = Path.GetFileName(chunk.SourceFile),
                         ChunkId = chunk.ChunkId,
-                        PageNumber = chunk.PageNumber
+                        PageNumber = chunk.PageNumber,
+                        Section = chunk.Section
                     },
                     Target = new DocumentReference
                     {
                         DocumentId = similar.DocumentId,
                         FileName = Path.GetFileName(similar.SourceFile),
                         ChunkId = similar.ChunkId,
-                        PageNumber = similar.PageNumber
+                        PageNumber = similar.PageNumber,
+                        Section = similar.Section
                     },
                     SourceExcerpt = TruncateText(chunk.Content, 200),
                     TargetExcerpt = TruncateText(similar.Content, 200),

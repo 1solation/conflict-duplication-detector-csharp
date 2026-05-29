@@ -123,11 +123,32 @@ public class AnalyzeCommand : Command
             
             foreach (var dup in result.Duplications.Take(10))
             {
-                Console.WriteLine($"  [{dup.Type}] {dup.Source.FileName} <-> {dup.Target.FileName} (Similarity: {dup.SimilarityScore:P0})");
+                Console.WriteLine();
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine($"  [{dup.Type}] Similarity: {dup.SimilarityScore:P0}");
+                Console.ResetColor();
+                
+                Console.WriteLine($"    Source: {dup.Source.FileName}");
+                PrintLocation(dup.Source);
+                if (!string.IsNullOrEmpty(dup.SourceExcerpt))
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.WriteLine($"      \"{TruncateForDisplay(dup.SourceExcerpt, 100)}\"");
+                    Console.ResetColor();
+                }
+                
+                Console.WriteLine($"    Target: {dup.Target.FileName}");
+                PrintLocation(dup.Target);
+                if (!string.IsNullOrEmpty(dup.TargetExcerpt))
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.WriteLine($"      \"{TruncateForDisplay(dup.TargetExcerpt, 100)}\"");
+                    Console.ResetColor();
+                }
             }
             
             if (result.Duplications.Count > 10)
-                Console.WriteLine($"  ... and {result.Duplications.Count - 10} more");
+                Console.WriteLine($"\n  ... and {result.Duplications.Count - 10} more");
         }
         else
         {
@@ -142,12 +163,43 @@ public class AnalyzeCommand : Command
             
             foreach (var conflict in result.Conflicts.Take(10))
             {
-                Console.WriteLine($"  [{conflict.Severity}] {conflict.Type}: {conflict.Source.FileName} <-> {conflict.Target.FileName}");
-                Console.WriteLine($"    {conflict.Explanation}");
+                Console.WriteLine();
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine($"  [{conflict.Severity}] {conflict.Type}");
+                Console.ResetColor();
+                
+                Console.WriteLine($"    Source: {conflict.Source.FileName}");
+                PrintLocation(conflict.Source);
+                if (!string.IsNullOrEmpty(conflict.SourceStatement))
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.WriteLine($"      \"{TruncateForDisplay(conflict.SourceStatement, 100)}\"");
+                    Console.ResetColor();
+                }
+                
+                Console.WriteLine($"    Target: {conflict.Target.FileName}");
+                PrintLocation(conflict.Target);
+                if (!string.IsNullOrEmpty(conflict.TargetStatement))
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.WriteLine($"      \"{TruncateForDisplay(conflict.TargetStatement, 100)}\"");
+                    Console.ResetColor();
+                }
+                
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine($"    Explanation: {conflict.Explanation}");
+                Console.ResetColor();
+                
+                if (!string.IsNullOrEmpty(conflict.Resolution))
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"    Resolution: {conflict.Resolution}");
+                    Console.ResetColor();
+                }
             }
             
             if (result.Conflicts.Count > 10)
-                Console.WriteLine($"  ... and {result.Conflicts.Count - 10} more");
+                Console.WriteLine($"\n  ... and {result.Conflicts.Count - 10} more");
         }
         else
         {
@@ -162,18 +214,89 @@ public class AnalyzeCommand : Command
             
             foreach (var inconsistency in result.Inconsistencies.Take(10))
             {
-                Console.WriteLine($"  [{inconsistency.Type}] Variants: {string.Join(", ", inconsistency.Variants.Take(5))}");
+                Console.WriteLine();
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine($"  [{inconsistency.Type}]");
+                Console.ResetColor();
+                
+                Console.WriteLine($"    Variants: {string.Join(", ", inconsistency.Variants.Take(5))}");
+                
+                if (inconsistency.Occurrences.Any())
+                {
+                    Console.WriteLine("    Found in:");
+                    foreach (var occurrence in inconsistency.Occurrences.Take(5))
+                    {
+                        Console.Write($"      - {occurrence.FileName}");
+                        var locationParts = new List<string>();
+                        if (!string.IsNullOrEmpty(occurrence.PageNumber))
+                            locationParts.Add($"Page {occurrence.PageNumber}");
+                        if (!string.IsNullOrEmpty(occurrence.Section))
+                            locationParts.Add($"Section: {occurrence.Section}");
+                        if (locationParts.Any())
+                            Console.Write($" ({string.Join(", ", locationParts)})");
+                        Console.WriteLine();
+                    }
+                    if (inconsistency.Occurrences.Count > 5)
+                        Console.WriteLine($"      ... and {inconsistency.Occurrences.Count - 5} more locations");
+                }
+                
+                if (!string.IsNullOrEmpty(inconsistency.Explanation))
+                {
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine($"    Explanation: {inconsistency.Explanation}");
+                    Console.ResetColor();
+                }
+                
                 if (!string.IsNullOrEmpty(inconsistency.SuggestedStandard))
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine($"    Suggested: {inconsistency.SuggestedStandard}");
+                    Console.ResetColor();
+                }
             }
             
             if (result.Inconsistencies.Count > 10)
-                Console.WriteLine($"  ... and {result.Inconsistencies.Count - 10} more");
+                Console.WriteLine($"\n  ... and {result.Inconsistencies.Count - 10} more");
         }
         else
         {
             Console.WriteLine("\nNo inconsistencies found.");
         }
+    }
+    
+    private static void PrintLocation(DocumentReference reference)
+    {
+        var locationParts = new List<string>();
+        
+        if (!string.IsNullOrEmpty(reference.PageNumber))
+            locationParts.Add($"Page {reference.PageNumber}");
+        if (!string.IsNullOrEmpty(reference.Section))
+            locationParts.Add($"Section: {reference.Section}");
+        if (reference.LineNumber.HasValue)
+            locationParts.Add($"Line {reference.LineNumber}");
+            
+        if (locationParts.Any())
+        {
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.WriteLine($"      Location: {string.Join(", ", locationParts)}");
+            Console.ResetColor();
+        }
+    }
+    
+    private static string TruncateForDisplay(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text))
+            return string.Empty;
+            
+        var cleaned = text.Replace("\r", " ").Replace("\n", " ");
+        while (cleaned.Contains("  "))
+            cleaned = cleaned.Replace("  ", " ");
+        cleaned = cleaned.Trim();
+        
+        if (cleaned.Length <= maxLength)
+            return cleaned;
+            
+        return cleaned.Substring(0, maxLength - 3) + "...";
     }
     
     private static void PrintMetrics(AnalysisMetrics metrics)
