@@ -20,12 +20,14 @@ A multi-agent system built with C#/.NET that analyzes document collections to de
 - **Interactive Chat**: Multi-agent chat interface with automatic workflow routing
 - **CLI Interface**: Full command-line interface for batch processing and single-file checks
 - **File Check**: Compare one document against the ingested knowledge base before adding it
+- **HTTP API**: REST API with Swagger UI and background jobs for long-running work
+- **Docker**: Containerized API with persistent `/data` volume
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      CLI Interface                           │
+│              CLI / HTTP API (Swagger)                        │
 │         (ingest, analyze, check, chat commands)              │
 └─────────────────────────┬───────────────────────────────────┘
                           │
@@ -149,6 +151,72 @@ Example chat queries:
 - "What terminology inconsistencies exist?"
 - "Run full analysis"
 
+## HTTP API
+
+The API wraps the same Core services as the CLI. Long-running operations return **202 Accepted** with a job ID; poll **`GET /api/jobs/{jobId}`** until the status is `completed` or `failed`.
+
+### Run locally
+
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+dotnet run --project src/ConflictDuplicationDetector.Api
+```
+
+Open Swagger UI at [http://localhost:5080/swagger](http://localhost:5080/swagger).
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/health` | Health and knowledge-base summary |
+| `GET` | `/api/knowledge-base` | Vector store status |
+| `POST` | `/api/documents` | Upload file → ingest job (multipart) |
+| `POST` | `/api/analysis` | Analyze knowledge base (JSON body) |
+| `POST` | `/api/check` | Upload file → check against KB (multipart, `?type=all`) |
+| `POST` | `/api/chat` | Chat query (JSON body) |
+| `GET` | `/api/jobs` | List recent jobs |
+| `GET` | `/api/jobs/{jobId}` | Job status and result |
+
+### Example workflow
+
+```bash
+# 1. Ingest a document (returns job ID)
+curl -s -X POST http://localhost:8080/api/documents \
+  -F "file=@./mock_documents/Mock_guidance_doc_penalty_notices.docx"
+
+# 2. Poll until completed
+curl -s http://localhost:8080/api/jobs/{jobId}
+
+# 3. Check a new file against the knowledge base
+curl -s -X POST "http://localhost:8080/api/check?type=all" \
+  -F "file=@./mock_documents/Mock_conflicting_guidance_doc_penalty_notices.docx"
+
+# 4. Run full knowledge-base analysis
+curl -s -X POST http://localhost:8080/api/analysis \
+  -H "Content-Type: application/json" \
+  -d '{"type":"all"}'
+```
+
+## Docker
+
+Build and run the API in Docker (requires `OPENAI_API_KEY` in the environment):
+
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+docker compose up --build
+```
+
+- API: [http://localhost:8080/swagger](http://localhost:8080/swagger)
+- Knowledge base and uploads persist in the `detector-data` volume at `/data`
+
+Override paths via environment variables:
+
+| Variable | Default (container) |
+|----------|---------------------|
+| `VectorStore__PersistPath` | `/data/vectors.json` |
+| `Storage__UploadsPath` | `/data/uploads` |
+| `OPENAI_API_KEY` | (required) |
+
 ## Configuration
 
 Configuration can be set via `appsettings.json` or environment variables:
@@ -164,6 +232,9 @@ Configuration can be set via `appsettings.json` or environment variables:
   "VectorStore": {
     "PersistPath": "./data/vectors.json",
     "MaxSearchResults": 10
+  },
+  "Storage": {
+    "UploadsPath": "./data/uploads"
   },
   "Analysis": {
     "DuplicationThreshold": 0.85,
@@ -192,9 +263,15 @@ ConflictDuplicationDetector/
 │   │   ├── Models/           # Data models and configuration
 │   │   ├── Services/         # Business logic (e.g. FileAnalysisService for check)
 │   │   └── VectorStore/      # Vector database wrapper
-│   └── ConflictDuplicationDetector.Cli/
-│       ├── Commands/         # CLI commands
-│       └── Program.cs        # Entry point
+│   ├── ConflictDuplicationDetector.Cli/
+│   │   ├── Commands/         # CLI commands
+│   │   └── Program.cs        # Entry point
+│   └── ConflictDuplicationDetector.Api/
+│       ├── Endpoints/        # REST API
+│       ├── Services/         # Job queue, application layer
+│       └── Program.cs        # API + Swagger
+├── Dockerfile
+├── docker-compose.yml
 └── tests/
     └── ConflictDuplicationDetector.Tests/
 ```

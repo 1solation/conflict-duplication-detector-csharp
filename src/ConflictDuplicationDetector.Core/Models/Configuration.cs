@@ -5,6 +5,12 @@ public class AppConfiguration
     public OpenAIConfiguration OpenAI { get; set; } = new();
     public VectorStoreConfiguration VectorStore { get; set; } = new();
     public AnalysisConfiguration Analysis { get; set; } = new();
+    public StorageConfiguration Storage { get; set; } = new();
+}
+
+public class StorageConfiguration
+{
+    public string UploadsPath { get; set; } = "./data/uploads";
 }
 
 public class OpenAIConfiguration
@@ -12,7 +18,7 @@ public class OpenAIConfiguration
     public string ApiKey { get; set; } = string.Empty;
     public string? AzureEndpoint { get; set; }
     public string? AzureApiVersion { get; set; }
-    public string Model { get; set; }
+    public string Model { get; set; } = "gpt-5-nano";
     public string EmbeddingModel { get; set; } = "text-embedding-3-small";
     public bool UseAzure => !string.IsNullOrEmpty(AzureEndpoint);
 }

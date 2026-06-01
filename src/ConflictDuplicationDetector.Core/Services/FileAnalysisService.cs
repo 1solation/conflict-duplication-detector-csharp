@@ -7,7 +7,7 @@ using Microsoft.Extensions.AI;
 
 namespace ConflictDuplicationDetector.Core.Services;
 
-public class FileAnalysisService
+public class FileAnalysisService : IFileAnalysisService
 {
     private readonly IChatClient _chatClient;
     private readonly IVectorStore _vectorStore;
