@@ -8,44 +8,44 @@ public static class ConfigurationLoader
     public static AppConfiguration Load(string? configPath = null)
     {
         LoadEnvFile();
-        
+
         var builder = new ConfigurationBuilder();
-        
+
         var basePath = AppContext.BaseDirectory;
         var defaultConfigPath = Path.Combine(basePath, "appsettings.json");
-        
+
         if (File.Exists(defaultConfigPath))
         {
             builder.AddJsonFile(defaultConfigPath, optional: true);
         }
-        
+
         var currentDirConfig = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
         if (File.Exists(currentDirConfig) && currentDirConfig != defaultConfigPath)
         {
             builder.AddJsonFile(currentDirConfig, optional: true);
         }
-        
+
         if (!string.IsNullOrEmpty(configPath) && File.Exists(configPath))
         {
             builder.AddJsonFile(configPath, optional: false);
         }
-        
+
         builder.AddEnvironmentVariables();
-        
+
         var configuration = builder.Build();
-        
+
         var appConfig = new AppConfiguration();
-        
+
         appConfig.OpenAI.ApiKey = GetConfigValue(configuration, "OpenAI:ApiKey", "OPENAI_API_KEY") ?? string.Empty;
         appConfig.OpenAI.AzureEndpoint = GetConfigValue(configuration, "OpenAI:AzureEndpoint", "AZURE_OPENAI_ENDPOINT");
         appConfig.OpenAI.AzureApiVersion = configuration["OpenAI:AzureApiVersion"];
-        appConfig.OpenAI.Model = configuration["OpenAI:Model"] ?? "gpt-4o";
+        appConfig.OpenAI.Model = configuration["OpenAI:Model"] ?? "gpt-5-nano";
         appConfig.OpenAI.EmbeddingModel = configuration["OpenAI:EmbeddingModel"] ?? "text-embedding-3-small";
-        
+
         appConfig.VectorStore.PersistPath = configuration["VectorStore:PersistPath"] ?? "./data/vectors.json";
         if (int.TryParse(configuration["VectorStore:MaxSearchResults"], out var maxResults))
             appConfig.VectorStore.MaxSearchResults = maxResults;
-            
+
         if (double.TryParse(configuration["Analysis:DuplicationThreshold"], out var threshold))
             appConfig.Analysis.DuplicationThreshold = threshold;
         if (int.TryParse(configuration["Analysis:ChunkSize"], out var chunkSize))
@@ -54,28 +54,28 @@ public static class ConfigurationLoader
             appConfig.Analysis.ChunkOverlap = overlap;
         if (int.TryParse(configuration["Analysis:MaxConcurrentAgents"], out var maxAgents))
             appConfig.Analysis.MaxConcurrentAgents = maxAgents;
-        
+
         return appConfig;
     }
-    
+
     private static string? GetConfigValue(IConfiguration configuration, string configKey, string envKey)
     {
         var value = configuration[configKey];
-        
+
         if (!string.IsNullOrEmpty(value) && value.StartsWith("env:"))
         {
             var envVarName = value.Substring(4);
             value = Environment.GetEnvironmentVariable(envVarName);
         }
-        
+
         if (string.IsNullOrEmpty(value))
         {
             value = Environment.GetEnvironmentVariable(envKey);
         }
-        
+
         return value;
     }
-    
+
     private static void LoadEnvFile()
     {
         var envPaths = new[]
@@ -83,36 +83,36 @@ public static class ConfigurationLoader
             Path.Combine(Directory.GetCurrentDirectory(), ".env"),
             Path.Combine(AppContext.BaseDirectory, ".env")
         };
-        
+
         foreach (var envPath in envPaths)
         {
             if (!File.Exists(envPath))
                 continue;
-                
+
             foreach (var line in File.ReadAllLines(envPath))
             {
                 var trimmedLine = line.Trim();
                 if (string.IsNullOrEmpty(trimmedLine) || trimmedLine.StartsWith("#"))
                     continue;
-                    
+
                 var separatorIndex = trimmedLine.IndexOf('=');
                 if (separatorIndex <= 0)
                     continue;
-                    
+
                 var key = trimmedLine.Substring(0, separatorIndex).Trim();
                 var value = trimmedLine.Substring(separatorIndex + 1).Trim();
-                
+
                 if (value.StartsWith("\"") && value.EndsWith("\""))
                     value = value.Substring(1, value.Length - 2);
                 else if (value.StartsWith("'") && value.EndsWith("'"))
                     value = value.Substring(1, value.Length - 2);
-                
+
                 if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable(key)))
                 {
                     Environment.SetEnvironmentVariable(key, value);
                 }
             }
-            
+
             break;
         }
     }

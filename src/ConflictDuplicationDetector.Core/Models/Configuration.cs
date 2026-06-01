@@ -12,7 +12,7 @@ public class OpenAIConfiguration
     public string ApiKey { get; set; } = string.Empty;
     public string? AzureEndpoint { get; set; }
     public string? AzureApiVersion { get; set; }
-    public string Model { get; set; } = "gpt-4o";
+    public string Model { get; set; }
     public string EmbeddingModel { get; set; } = "text-embedding-3-small";
     public bool UseAzure => !string.IsNullOrEmpty(AzureEndpoint);
 }

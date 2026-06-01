@@ -14,14 +14,15 @@ A multi-agent system built with C#/.NET that analyzes document collections to de
 - **Performance Metrics**: Tracks network time, calculation time, and token usage per agent
 - **Persistent Storage**: SharpVector in-memory vector database with file persistence
 - **Interactive Chat**: Multi-agent chat interface with automatic workflow routing
-- **CLI Interface**: Full command-line interface for batch processing
+- **CLI Interface**: Full command-line interface for batch processing and single-file checks
+- **File Check**: Compare one document against the ingested knowledge base before adding it
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                      CLI Interface                           │
-│              (ingest, analyze, chat commands)                │
+│         (ingest, analyze, check, chat commands)              │
 └─────────────────────────┬───────────────────────────────────┘
                           │
 ┌─────────────────────────▼───────────────────────────────────┐
@@ -99,6 +100,37 @@ dotnet run --project src/ConflictDuplicationDetector.Cli -- analyze --output res
 dotnet run --project src/ConflictDuplicationDetector.Cli -- analyze --type conflicts --topic "pricing policy"
 ```
 
+### Check a File Against the Knowledge Base
+
+Analyze a single file against documents already ingested into the knowledge base. Use this to validate a new or updated document for duplications, conflicts, and inconsistencies with existing content before ingesting it.
+
+Requires a populated knowledge base (`ingest` must have been run first).
+
+```bash
+# Full analysis against the knowledge base
+dotnet run --project src/ConflictDuplicationDetector.Cli -- check ./documents/new-policy.docx
+
+# Analyze specific type
+dotnet run --project src/ConflictDuplicationDetector.Cli -- check ./documents/new-policy.docx --type duplications
+dotnet run --project src/ConflictDuplicationDetector.Cli -- check ./documents/new-policy.docx --type conflicts
+dotnet run --project src/ConflictDuplicationDetector.Cli -- check ./documents/new-policy.docx --type inconsistencies
+
+# Save results to file
+dotnet run --project src/ConflictDuplicationDetector.Cli -- check ./documents/new-policy.docx --output check-results.json
+
+# Use a custom configuration file
+dotnet run --project src/ConflictDuplicationDetector.Cli -- check ./documents/new-policy.docx --config ./appsettings.json
+```
+
+| Option | Description |
+|--------|-------------|
+| `file` | Path to the file to analyze (required) |
+| `--type` | Analysis type: `all`, `duplications`, `conflicts`, or `inconsistencies` (default: `all`) |
+| `--output` | Path to write JSON results |
+| `--config` | Path to configuration file |
+
+**`analyze` vs `check`**: `analyze` scans the entire ingested collection for issues within the knowledge base. `check` compares one target file against that collection—duplications are found via vector similarity to other documents, while conflicts and inconsistencies use AI to compare the file content with relevant knowledge-base context.
+
 ### Interactive Chat
 
 Start an interactive session:
@@ -121,7 +153,7 @@ Configuration can be set via `appsettings.json` or environment variables:
 {
   "OpenAI": {
     "ApiKey": "env:OPENAI_API_KEY",
-    "Model": "gpt-4o",
+    "Model": "gpt-5-nano",
     "EmbeddingModel": "text-embedding-3-small",
     "AzureEndpoint": null
   },
@@ -154,7 +186,7 @@ ConflictDuplicationDetector/
 │   │   ├── Agents/           # AI agents (Orchestrator, Duplication, Conflict, Inconsistency)
 │   │   ├── Documents/        # Document parsers (PDF, DOCX, HTML)
 │   │   ├── Models/           # Data models and configuration
-│   │   ├── Services/         # Business logic services
+│   │   ├── Services/         # Business logic (e.g. FileAnalysisService for check)
 │   │   └── VectorStore/      # Vector database wrapper
 │   └── ConflictDuplicationDetector.Cli/
 │       ├── Commands/         # CLI commands

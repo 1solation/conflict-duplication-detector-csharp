@@ -5,6 +5,7 @@ var rootCommand = new RootCommand("Document Conflict & Duplication Detector - Mu
 {
     new IngestCommand(),
     new AnalyzeCommand(),
+    new CheckCommand(),
     new ChatCommand()
 };
 
@@ -17,6 +18,7 @@ A multi-agent system for analyzing document collections to detect:
 Usage Examples:
   detector ingest ./documents --recursive
   detector analyze --type all --output results.json
+  detector check ./new-document.docx --type all
   detector chat
 
 Environment Variables:
