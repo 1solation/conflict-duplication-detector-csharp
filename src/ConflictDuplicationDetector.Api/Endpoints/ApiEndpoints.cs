@@ -30,7 +30,7 @@ public static class ApiEndpoints
 
         api.MapPost("/analysis", StartAnalysis)
             .WithName("StartAnalysis")
-            .WithSummary("Analyze the knowledge base")
+            .WithSummary("Analyse the knowledge base")
             .WithDescription("Enqueue analysis of all ingested documents (duplications, conflicts, inconsistencies). Returns 202 with a job ID.");
 
         api.MapPost("/check", CheckDocument)

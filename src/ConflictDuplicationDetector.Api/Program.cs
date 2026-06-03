@@ -22,7 +22,7 @@ builder.Services.AddSwaggerGen(options =>
         Description = """
             HTTP API for document ingestion, knowledge-base analysis, file checks, and chat.
 
-            Long-running operations (ingest, analyze, check, chat) return **202 Accepted** with a job ID.
+            Long-running operations (ingest, analyse, check, chat) return **202 Accepted** with a job ID.
             Poll **GET /api/jobs/{jobId}** until status is `completed` or `failed`.
             """
     });

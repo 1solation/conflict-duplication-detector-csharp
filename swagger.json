@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "Conflict & Duplication Detector API",
-    "description": "HTTP API for document ingestion, knowledge-base analysis, file checks, and chat.\n\nLong-running operations (ingest, analyze, check, chat) return **202 Accepted** with a job ID.\nPoll **GET /api/jobs/{jobId}** until status is `completed` or `failed`.",
+    "description": "HTTP API for document ingestion, knowledge-base analysis, file checks, and chat.\n\nLong-running operations (ingest, analyse, check, chat) return **202 Accepted** with a job ID.\nPoll **GET /api/jobs/{jobId}** until status is `completed` or `failed`.",
     "version": "v1"
   },
   "paths": {
@@ -79,7 +79,7 @@
         "tags": [
           "Detector"
         ],
-        "summary": "Analyze the knowledge base",
+        "summary": "Analyse the knowledge base",
         "description": "Enqueue analysis of all ingested documents (duplications, conflicts, inconsistencies). Returns 202 with a job ID.",
         "operationId": "StartAnalysis",
         "requestBody": {

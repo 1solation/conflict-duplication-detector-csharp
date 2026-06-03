@@ -17,7 +17,7 @@ A multi-agent system for analyzing document collections to detect:
 
 Usage Examples:
   detector ingest ./documents --recursive
-  detector analyze --type all --output results.json
+  detector analyse --type all --output results.json
   detector check ./new-document.docx --type all
   detector chat
 

@@ -10,9 +10,9 @@ namespace ConflictDuplicationDetector.Cli.Commands;
 
 public class CheckCommand : Command
 {
-    public CheckCommand() : base("check", "Analyze a file against the existing knowledge base for conflicts, duplications, and inconsistencies")
+    public CheckCommand() : base("check", "Analyse a file against the existing knowledge base for conflicts, duplications, and inconsistencies")
     {
-        var fileArgument = new Argument<string>("file", "Path to the file to analyze against the knowledge base");
+        var fileArgument = new Argument<string>("file", "Path to the file to analyse against the knowledge base");
         var typeOption = new Option<string?>("--type", "Analysis type: all, duplications, conflicts, inconsistencies");
         var outputOption = new Option<string?>("--output", "Output file path for results (JSON)");
         var configOption = new Option<string?>("--config", "Path to configuration file");
