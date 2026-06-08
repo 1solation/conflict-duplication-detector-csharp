@@ -238,7 +238,7 @@ Respond in JSON format:
         {""file"": ""filename"", ""excerpt"": ""context""}
       ],
       ""explanation"": ""description of the inconsistency"",
-      ""suggestedStandard"": ""recommended consistent term/format""
+      ""suggestion"": ""recommended consistent term/format""
     }
   ],
   ""summary"": ""overall summary""

@@ -30,7 +30,13 @@ public static class DetectorServiceCollectionExtensions
         });
 
         services.AddSingleton<IVectorStoreCoordinator, VectorStoreCoordinator>();
+        
+        services.AddSingleton<IDocumentParser, PdfDocumentParser>();
+        services.AddSingleton<IDocumentParser, DocxDocumentParser>();
+        services.AddSingleton<IDocumentParser, HtmlDocumentParser>();
+        services.AddSingleton<IDocumentParser, TextDocumentParser>();
         services.AddSingleton<IDocumentParserFactory, DocumentParserFactory>();
+        
         services.AddSingleton<IDocumentChunker, DocumentChunker>();
         services.AddSingleton<MetricsTracker>();
 

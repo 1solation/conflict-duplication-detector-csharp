@@ -23,11 +23,11 @@ public static class ApiEndpoints
             .WithDescription("Returns whether the vector store exists and how many chunks are loaded.")
             .Produces<KnowledgeBaseStatusResponse>();
 
-        api.MapPost("/documents", IngestDocument)
-            .WithName("IngestDocument")
-            .WithSummary("Ingest a document")
+        api.MapPost("/documents", IngestDocuments)
+            .WithName("IngestDocuments")
+            .WithSummary("Ingest documents")
             .WithDescription("""
-                Upload a document and enqueue ingestion into the knowledge base. Returns 202 with a job ID.
+                Upload one or more documents and enqueue ingestion into the knowledge base. Returns 202 with a job ID.
                 
                 **Supported file formats:**
                 - PDF (.pdf) - `application/pdf`
@@ -106,14 +106,14 @@ public static class ApiEndpoints
         return Results.Ok(status);
     }
 
-    private static async Task<IResult> IngestDocument(
-        IFormFile file,
+    private static async Task<IResult> IngestDocuments(
+        IFormFileCollection files,
         DetectorApplicationService detector,
         IJobService jobs,
         CancellationToken cancellationToken)
     {
-        if (file.Length == 0)
-            return Results.BadRequest(new ProblemDetails { Title = "No file uploaded" });
+        if (files.Count == 0 || files.All(f => f.Length == 0))
+            return Results.BadRequest(new ProblemDetails { Title = "No files uploaded" });
 
         try
         {
@@ -124,10 +124,10 @@ public static class ApiEndpoints
             return Results.Problem(ex.Message, statusCode: StatusCodes.Status503ServiceUnavailable);
         }
 
-        var savedPath = await detector.SaveUploadAsync(file, cancellationToken);
+        var savedPaths = await detector.SaveUploadsAsync(files, cancellationToken);
         var accepted = await jobs.EnqueueAsync(
             JobType.Ingest,
-            async ct => await detector.IngestFileAsync(savedPath, ct),
+            async ct => await detector.IngestFilesAsync(savedPaths, ct),
             cancellationToken);
 
         return Results.Accepted(accepted.StatusUrl, accepted);

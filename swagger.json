@@ -394,7 +394,7 @@
                           }
                         ],
                         "explanation": "Same concept referred to by different names",
-                        "suggestedStandard": "PTO (Paid Time Off)"
+                        "suggestion": "PTO (Paid Time Off)"
                       }
                     ],
                     "metrics": {

@@ -61,10 +61,36 @@ public class DetectorApplicationService
         return path;
     }
 
+    public async Task<IReadOnlyList<string>> SaveUploadsAsync(IFormFileCollection files, CancellationToken cancellationToken)
+    {
+        Directory.CreateDirectory(_config.Storage.UploadsPath);
+        var savedPaths = new List<string>();
+
+        foreach (var file in files.Where(f => f.Length > 0))
+        {
+            var safeName = Path.GetFileName(file.FileName);
+            var path = Path.Combine(_config.Storage.UploadsPath, $"{Guid.NewGuid()}_{safeName}");
+
+            await using var stream = File.Create(path);
+            await file.CopyToAsync(stream, cancellationToken);
+            savedPaths.Add(path);
+        }
+
+        return savedPaths;
+    }
+
     public async Task<IngestionResult> IngestFileAsync(string filePath, CancellationToken cancellationToken)
     {
         return await _coordinator.ExecuteExclusiveAsync(
             async (_, ct) => await _ingestionService.IngestFileAsync(filePath, ct),
+            saveAfter: true,
+            cancellationToken);
+    }
+
+    public async Task<IngestionResult> IngestFilesAsync(IReadOnlyList<string> filePaths, CancellationToken cancellationToken)
+    {
+        return await _coordinator.ExecuteExclusiveAsync(
+            async (_, ct) => await _ingestionService.IngestFilesAsync(filePaths, ct),
             saveAfter: true,
             cancellationToken);
     }

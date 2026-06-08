@@ -7,13 +7,13 @@ namespace ConflictDuplicationDetector.Core.Agents;
 public class InconsistencyAgent : BaseAgent
 {
     public InconsistencyAgent(
-        IChatClient chatClient, 
-        IVectorStore vectorStore, 
-        MetricsTracker metricsTracker) 
+        IChatClient chatClient,
+        IVectorStore vectorStore,
+        MetricsTracker metricsTracker)
         : base(chatClient, vectorStore, metricsTracker, "InconsistencyAgent")
     {
     }
-    
+
     protected override string SystemPrompt => @"You are an inconsistency detection specialist. Your role is to find terminology, formatting, and structural inconsistencies across documents.
 
 CRITICAL RULES:
@@ -46,34 +46,34 @@ Respond in JSON format:
         {""file"": ""filename"", ""excerpt"": ""context""}
       ],
       ""explanation"": ""description of the inconsistency"",
-      ""suggestedStandard"": ""recommended consistent term/format""
+      ""suggestion"": ""recommended consistent term/format""
     }
   ],
   ""summary"": ""overall summary of inconsistency analysis""
 }";
-    
+
     public async Task<List<InconsistencyResult>> AnalyzeAsync(string? focusArea = null, CancellationToken cancellationToken = default)
     {
         var query = focusArea ?? "Find all terminology, formatting, and structural inconsistencies across the documents";
-        
+
         var (response, _) = await InvokeWithStructuredOutputAsync<InconsistencyResponse>(query, cancellationToken: cancellationToken);
-        
+
         if (response?.Inconsistencies == null)
             return new List<InconsistencyResult>();
-            
+
         return response.Inconsistencies.Select(i => new InconsistencyResult
         {
             Type = ParseInconsistencyType(i.Type),
             Variants = i.Variants ?? new List<string>(),
-            Occurrences = i.Occurrences?.Select(o => new DocumentReference 
-            { 
-                FileName = o.File 
+            Occurrences = i.Occurrences?.Select(o => new DocumentReference
+            {
+                FileName = o.File
             }).ToList() ?? new List<DocumentReference>(),
             Explanation = i.Explanation,
             SuggestedStandard = i.SuggestedStandard
         }).ToList();
     }
-    
+
     public async Task<List<InconsistencyResult>> AnalyzeTerminologyAsync(CancellationToken cancellationToken = default)
     {
         var query = @"Focus on finding terminology inconsistencies such as:
@@ -81,10 +81,10 @@ Respond in JSON format:
 - Inconsistent use of technical terms
 - Mixed use of abbreviations and full forms
 - Different spellings of the same term";
-        
+
         return await AnalyzeAsync(query, cancellationToken);
     }
-    
+
     public async Task<List<InconsistencyResult>> AnalyzeFormattingAsync(CancellationToken cancellationToken = default)
     {
         var query = @"Focus on finding formatting inconsistencies such as:
@@ -93,10 +93,10 @@ Respond in JSON format:
 - Unit inconsistencies (meters vs metres, kg vs kilograms)
 - Currency format variations
 - Time format variations (12-hour vs 24-hour)";
-        
+
         return await AnalyzeAsync(query, cancellationToken);
     }
-    
+
     public async Task<List<InconsistencyResult>> AnalyzeStructureAsync(CancellationToken cancellationToken = default)
     {
         var query = @"Focus on finding structural inconsistencies such as:
@@ -104,10 +104,10 @@ Respond in JSON format:
 - Inconsistent section ordering
 - Varying list formats (numbered vs bulleted)
 - Different table structures for similar data";
-        
+
         return await AnalyzeAsync(query, cancellationToken);
     }
-    
+
     private static InconsistencyType ParseInconsistencyType(string type)
     {
         return type?.ToLowerInvariant() switch

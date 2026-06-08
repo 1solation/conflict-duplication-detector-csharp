@@ -3,7 +3,7 @@ namespace ConflictDuplicationDetector.Core.Models;
 public class AnalysisResult
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
-    public DateTime AnalyzedAt { get; set; } = DateTime.UtcNow;
+    public DateTime AnalysedAt { get; set; } = DateTime.UtcNow;
     public List<DuplicationResult> Duplications { get; set; } = new();
     public List<ConflictResult> Conflicts { get; set; } = new();
     public List<InconsistencyResult> Inconsistencies { get; set; } = new();
@@ -95,5 +95,6 @@ public class AnalysisMetrics
     public int ConflictsFound { get; set; }
     public int InconsistenciesFound { get; set; }
     public TimeSpan TotalDuration { get; set; }
+    public int TotalTokens => AgentMetrics.Sum(a => a.TotalTokens);
     public List<AgentMetrics> AgentMetrics { get; set; } = new();
 }

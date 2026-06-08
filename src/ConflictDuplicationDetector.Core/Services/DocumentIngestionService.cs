@@ -7,6 +7,7 @@ namespace ConflictDuplicationDetector.Core.Services;
 public interface IDocumentIngestionService
 {
     Task<IngestionResult> IngestFileAsync(string filePath, CancellationToken cancellationToken = default);
+    Task<IngestionResult> IngestFilesAsync(IReadOnlyList<string> filePaths, CancellationToken cancellationToken = default);
     Task<IngestionResult> IngestDirectoryAsync(string directoryPath, bool recursive = true, CancellationToken cancellationToken = default);
     Task<int> GetDocumentCountAsync(CancellationToken cancellationToken = default);
 }
@@ -72,6 +73,26 @@ public class DocumentIngestionService : IDocumentIngestionService
             result.Errors.Add($"Error processing {filePath}: {ex.Message}");
         }
         
+        return result;
+    }
+
+    public async Task<IngestionResult> IngestFilesAsync(IReadOnlyList<string> filePaths, CancellationToken cancellationToken = default)
+    {
+        var result = new IngestionResult();
+
+        foreach (var filePath in filePaths)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var fileResult = await IngestFileAsync(filePath, cancellationToken);
+
+            result.DocumentsProcessed += fileResult.DocumentsProcessed;
+            result.ChunksCreated += fileResult.ChunksCreated;
+            result.ChunksSkipped += fileResult.ChunksSkipped;
+            result.Errors.AddRange(fileResult.Errors);
+        }
+
+        result.Success = result.Errors.Count == 0;
         return result;
     }
     

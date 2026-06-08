@@ -20,8 +20,8 @@ public class SwaggerExamplesFilter : IOperationFilter
                 AddResponseExample(operation, "200", KnowledgeBaseResponseExample);
                 break;
 
-            case "IngestDocument":
-                ConfigureFileUpload(operation);
+            case "IngestDocuments":
+                ConfigureMultiFileUpload(operation);
                 AddResponseExample(operation, "202", IngestAcceptedExample);
                 break;
 
@@ -97,6 +97,39 @@ public class SwaggerExamplesFilter : IOperationFilter
                                 Type = "string",
                                 Format = "binary",
                                 Description = "The document file (PDF, DOCX, HTML, or TXT)"
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
+    private static void ConfigureMultiFileUpload(OpenApiOperation operation)
+    {
+        operation.RequestBody = new OpenApiRequestBody
+        {
+            Required = true,
+            Description = "One or more document files to upload. Supported formats: PDF, DOCX, HTML, TXT",
+            Content = new Dictionary<string, OpenApiMediaType>
+            {
+                ["multipart/form-data"] = new OpenApiMediaType
+                {
+                    Schema = new OpenApiSchema
+                    {
+                        Type = "object",
+                        Required = new HashSet<string> { "files" },
+                        Properties = new Dictionary<string, OpenApiSchema>
+                        {
+                            ["files"] = new OpenApiSchema
+                            {
+                                Type = "array",
+                                Items = new OpenApiSchema
+                                {
+                                    Type = "string",
+                                    Format = "binary"
+                                },
+                                Description = "Document files (PDF, DOCX, HTML, or TXT)"
                             }
                         }
                     }
@@ -258,16 +291,83 @@ public class SwaggerExamplesFilter : IOperationFilter
                         new OpenApiObject { ["fileName"] = new OpenApiString("employee-handbook.docx") }
                     },
                     ["explanation"] = new OpenApiString("Same concept referred to by different names"),
-                    ["suggestedStandard"] = new OpenApiString("PTO (Paid Time Off)")
+                    ["suggestion"] = new OpenApiString("PTO (Paid Time Off)")
                 }
             },
             ["metrics"] = new OpenApiObject
             {
-                ["totalChunks"] = new OpenApiInteger(142),
+                ["totalDocuments"] = new OpenApiInteger(3),
+                ["totalChunks"] = new OpenApiInteger(31),
                 ["duplicationsFound"] = new OpenApiInteger(1),
                 ["conflictsFound"] = new OpenApiInteger(1),
-                ["inconsistenciesFound"] = new OpenApiInteger(1),
-                ["totalDuration"] = new OpenApiString("00:00:14.523")
+                ["inconsistenciesFound"] = new OpenApiInteger(4),
+                ["totalDuration"] = new OpenApiString("00:00:14.1087310"),
+                ["totalTokens"] = new OpenApiInteger(4989),
+                ["agentMetrics"] = new OpenApiArray
+                {
+                    new OpenApiObject
+                    {
+                        ["agentName"] = new OpenApiString("ConflictAgent"),
+                        ["totalCalls"] = new OpenApiInteger(1),
+                        ["totalNetworkTimeMs"] = new OpenApiLong(12593),
+                        ["totalCalculationTimeMs"] = new OpenApiLong(254),
+                        ["totalInputTokens"] = new OpenApiInteger(2189),
+                        ["totalOutputTokens"] = new OpenApiInteger(298),
+                        ["totalTokens"] = new OpenApiInteger(2487),
+                        ["callMetrics"] = new OpenApiArray
+                        {
+                            new OpenApiObject
+                            {
+                                ["callId"] = new OpenApiString("ad7cc708-4596-48f2-bd72-faa744e252ab"),
+                                ["agentName"] = new OpenApiString("ConflictAgent"),
+                                ["operation"] = new OpenApiString("invoke"),
+                                ["startedAt"] = new OpenApiString("2026-06-08T13:47:12.745764Z"),
+                                ["completedAt"] = new OpenApiString("2026-06-08T13:47:25.598582Z"),
+                                ["networkTimeMs"] = new OpenApiLong(12593),
+                                ["calculationTimeMs"] = new OpenApiLong(254),
+                                ["inputTokens"] = new OpenApiInteger(2189),
+                                ["outputTokens"] = new OpenApiInteger(298),
+                                ["success"] = new OpenApiBoolean(true),
+                                ["errorMessage"] = new OpenApiNull(),
+                                ["totalTimeMs"] = new OpenApiLong(12847)
+                            }
+                        },
+                        ["averageNetworkTimeMs"] = new OpenApiDouble(12593),
+                        ["averageCalculationTimeMs"] = new OpenApiDouble(254),
+                        ["averageTokensPerCall"] = new OpenApiDouble(2487)
+                    },
+                    new OpenApiObject
+                    {
+                        ["agentName"] = new OpenApiString("InconsistencyAgent"),
+                        ["totalCalls"] = new OpenApiInteger(1),
+                        ["totalNetworkTimeMs"] = new OpenApiLong(13840),
+                        ["totalCalculationTimeMs"] = new OpenApiLong(246),
+                        ["totalInputTokens"] = new OpenApiInteger(1785),
+                        ["totalOutputTokens"] = new OpenApiInteger(717),
+                        ["totalTokens"] = new OpenApiInteger(2502),
+                        ["callMetrics"] = new OpenApiArray
+                        {
+                            new OpenApiObject
+                            {
+                                ["callId"] = new OpenApiString("9f40986a-a02d-49d5-8356-e16994dfd529"),
+                                ["agentName"] = new OpenApiString("InconsistencyAgent"),
+                                ["operation"] = new OpenApiString("invoke"),
+                                ["startedAt"] = new OpenApiString("2026-06-08T13:47:12.7472Z"),
+                                ["completedAt"] = new OpenApiString("2026-06-08T13:47:26.836825Z"),
+                                ["networkTimeMs"] = new OpenApiLong(13840),
+                                ["calculationTimeMs"] = new OpenApiLong(246),
+                                ["inputTokens"] = new OpenApiInteger(1785),
+                                ["outputTokens"] = new OpenApiInteger(717),
+                                ["success"] = new OpenApiBoolean(true),
+                                ["errorMessage"] = new OpenApiNull(),
+                                ["totalTimeMs"] = new OpenApiLong(14086)
+                            }
+                        },
+                        ["averageNetworkTimeMs"] = new OpenApiDouble(13840),
+                        ["averageCalculationTimeMs"] = new OpenApiDouble(246),
+                        ["averageTokensPerCall"] = new OpenApiDouble(2502)
+                    }
+                }
             }
         }
     };
