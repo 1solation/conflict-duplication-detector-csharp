@@ -14,45 +14,74 @@ public static class ApiEndpoints
         api.MapGet("/health", GetHealth)
             .WithName("GetHealth")
             .WithSummary("Health check")
-            .WithDescription("Returns API health and knowledge-base summary.");
+            .WithDescription("Returns API health and knowledge-base summary.")
+            .Produces<HealthResponse>();
 
         api.MapGet("/knowledge-base", GetKnowledgeBase)
             .WithName("GetKnowledgeBase")
             .WithSummary("Knowledge base status")
-            .WithDescription("Returns whether the vector store exists and how many chunks are loaded.");
+            .WithDescription("Returns whether the vector store exists and how many chunks are loaded.")
+            .Produces<KnowledgeBaseStatusResponse>();
 
         api.MapPost("/documents", IngestDocument)
             .WithName("IngestDocument")
             .WithSummary("Ingest a document")
-            .WithDescription("Upload a document and enqueue ingestion into the knowledge base. Returns 202 with a job ID.")
-            .Accepts<IFormFile>("multipart/form-data")
+            .WithDescription("""
+                Upload a document and enqueue ingestion into the knowledge base. Returns 202 with a job ID.
+                
+                **Supported file formats:**
+                - PDF (.pdf) - `application/pdf`
+                - Word (.docx) - `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
+                - HTML (.html, .htm) - `text/html`
+                - Plain text (.txt) - `text/plain`
+                """)
+            .Produces<JobAcceptedResponse>(StatusCodes.Status202Accepted)
             .DisableAntiforgery();
 
         api.MapPost("/analysis", StartAnalysis)
             .WithName("StartAnalysis")
             .WithSummary("Analyse the knowledge base")
-            .WithDescription("Enqueue analysis of all ingested documents (duplications, conflicts, inconsistencies). Returns 202 with a job ID.");
+            .WithDescription("Enqueue analysis of all ingested documents (duplications, conflicts, inconsistencies). Returns 202 with a job ID. Type can be 'all', 'duplications', 'conflicts', or 'inconsistencies'.")
+            .Accepts<AnalysisJobRequest>("application/json")
+            .Produces<JobAcceptedResponse>(StatusCodes.Status202Accepted);
 
         api.MapPost("/check", CheckDocument)
             .WithName("CheckDocument")
             .WithSummary("Check a file against the knowledge base")
-            .WithDescription("Upload a file and compare it against the ingested knowledge base. Returns 202 with a job ID.")
-            .Accepts<IFormFile>("multipart/form-data")
+            .WithDescription("""
+                Upload a file and compare it against the ingested knowledge base without adding it. Returns 202 with a job ID.
+                
+                **Supported file formats:**
+                - PDF (.pdf) - `application/pdf`
+                - Word (.docx) - `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
+                - HTML (.html, .htm) - `text/html`
+                - Plain text (.txt) - `text/plain`
+                
+                **Query parameters:**
+                - `type` (optional): 'all', 'duplications', 'conflicts', or 'inconsistencies' (default: 'all')
+                """)
+            .Produces<JobAcceptedResponse>(StatusCodes.Status202Accepted)
             .DisableAntiforgery();
 
         api.MapPost("/chat", StartChat)
             .WithName("StartChat")
             .WithSummary("Chat with the knowledge base")
-            .WithDescription("Enqueue a natural-language query against ingested documents. Returns 202 with a job ID.");
+            .WithDescription("Enqueue a natural-language query against ingested documents. Returns 202 with a job ID. The system auto-routes queries: use words like 'duplicate/copy' for duplication analysis, 'conflict/contradict' for conflict analysis, 'terminology/format' for inconsistency analysis.")
+            .Accepts<ChatJobRequest>("application/json")
+            .Produces<JobAcceptedResponse>(StatusCodes.Status202Accepted);
 
         api.MapGet("/jobs", ListJobs)
             .WithName("ListJobs")
-            .WithSummary("List recent jobs");
+            .WithSummary("List recent jobs")
+            .WithDescription("Returns a list of recent jobs ordered by creation time. Optional query param 'limit' controls the number of jobs returned (default 50).")
+            .Produces<List<JobStatusResponse>>();
 
         api.MapGet("/jobs/{jobId:guid}", GetJob)
             .WithName("GetJob")
             .WithSummary("Get job status and result")
-            .WithDescription("Poll this endpoint until status is completed or failed.");
+            .WithDescription("Poll this endpoint until status is 'Completed' or 'Failed'. The 'result' field contains the analysis output when complete.")
+            .Produces<JobStatusResponse>()
+            .ProducesValidationProblem();
     }
 
     private static async Task<IResult> GetHealth(

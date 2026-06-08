@@ -16,7 +16,20 @@
         "operationId": "GetHealth",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "status": "healthy",
+                  "openAiConfigured": true,
+                  "knowledgeBaseExists": true,
+                  "chunkCount": 142
+                }
+              }
+            }
           }
         }
       }
@@ -31,7 +44,19 @@
         "operationId": "GetKnowledgeBase",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseStatusResponse"
+                },
+                "example": {
+                  "exists": true,
+                  "chunkCount": 142,
+                  "persistPath": "./data/vectors.json"
+                }
+              }
+            }
           }
         }
       }
@@ -42,9 +67,10 @@
           "Detector"
         ],
         "summary": "Ingest a document",
-        "description": "Upload a document and enqueue ingestion into the knowledge base. Returns 202 with a job ID.",
+        "description": "Upload a document and enqueue ingestion into the knowledge base. Returns 202 with a job ID.\n\n**Supported file formats:**\n- PDF (.pdf) - `application/pdf`\n- Word (.docx) - `application/vnd.openxmlformats-officedocument.wordprocessingml.document`\n- HTML (.html, .htm) - `text/html`\n- Plain text (.txt) - `text/plain`",
         "operationId": "IngestDocument",
         "requestBody": {
+          "description": "Document file to upload. Supported formats: PDF, DOCX, HTML, TXT",
           "content": {
             "multipart/form-data": {
               "schema": {
@@ -55,21 +81,31 @@
                 "properties": {
                   "file": {
                     "type": "string",
+                    "description": "The document file (PDF, DOCX, HTML, or TXT)",
                     "format": "binary"
                   }
                 }
-              },
-              "encoding": {
-                "file": {
-                  "style": "form"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobAcceptedResponse"
+                },
+                "example": {
+                  "jobId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "type": "Ingest",
+                  "status": "Pending",
+                  "statusUrl": "/api/jobs/3fa85f64-5717-4562-b3fc-2c963f66afa6"
                 }
               }
             }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
           }
         }
       }
@@ -80,21 +116,38 @@
           "Detector"
         ],
         "summary": "Analyse the knowledge base",
-        "description": "Enqueue analysis of all ingested documents (duplications, conflicts, inconsistencies). Returns 202 with a job ID.",
+        "description": "Enqueue analysis of all ingested documents (duplications, conflicts, inconsistencies). Returns 202 with a job ID. Type can be 'all', 'duplications', 'conflicts', or 'inconsistencies'.",
         "operationId": "StartAnalysis",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AnalysisJobRequest"
+              },
+              "example": {
+                "type": "all",
+                "topic": null
               }
             }
           },
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK"
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobAcceptedResponse"
+                },
+                "example": {
+                  "jobId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "type": "Analysis",
+                  "status": "Pending",
+                  "statusUrl": "/api/jobs/3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              }
+            }
           }
         }
       }
@@ -105,7 +158,7 @@
           "Detector"
         ],
         "summary": "Check a file against the knowledge base",
-        "description": "Upload a file and compare it against the ingested knowledge base. Returns 202 with a job ID.",
+        "description": "Upload a file and compare it against the ingested knowledge base without adding it. Returns 202 with a job ID.\n\n**Supported file formats:**\n- PDF (.pdf) - `application/pdf`\n- Word (.docx) - `application/vnd.openxmlformats-officedocument.wordprocessingml.document`\n- HTML (.html, .htm) - `text/html`\n- Plain text (.txt) - `text/plain`\n\n**Query parameters:**\n- `type` (optional): 'all', 'duplications', 'conflicts', or 'inconsistencies' (default: 'all')",
         "operationId": "CheckDocument",
         "parameters": [
           {
@@ -117,6 +170,7 @@
           }
         ],
         "requestBody": {
+          "description": "Document file to upload. Supported formats: PDF, DOCX, HTML, TXT",
           "content": {
             "multipart/form-data": {
               "schema": {
@@ -127,21 +181,31 @@
                 "properties": {
                   "file": {
                     "type": "string",
+                    "description": "The document file (PDF, DOCX, HTML, or TXT)",
                     "format": "binary"
                   }
                 }
-              },
-              "encoding": {
-                "file": {
-                  "style": "form"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobAcceptedResponse"
+                },
+                "example": {
+                  "jobId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "type": "Check",
+                  "status": "Pending",
+                  "statusUrl": "/api/jobs/3fa85f64-5717-4562-b3fc-2c963f66afa6"
                 }
               }
             }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
           }
         }
       }
@@ -152,21 +216,37 @@
           "Detector"
         ],
         "summary": "Chat with the knowledge base",
-        "description": "Enqueue a natural-language query against ingested documents. Returns 202 with a job ID.",
+        "description": "Enqueue a natural-language query against ingested documents. Returns 202 with a job ID. The system auto-routes queries: use words like 'duplicate/copy' for duplication analysis, 'conflict/contradict' for conflict analysis, 'terminology/format' for inconsistency analysis.",
         "operationId": "StartChat",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ChatJobRequest"
+              },
+              "example": {
+                "message": "Find any duplicates related to the refund policy"
               }
             }
           },
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK"
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobAcceptedResponse"
+                },
+                "example": {
+                  "jobId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "type": "Chat",
+                  "status": "Pending",
+                  "statusUrl": "/api/jobs/3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              }
+            }
           }
         }
       }
@@ -177,6 +257,7 @@
           "Detector"
         ],
         "summary": "List recent jobs",
+        "description": "Returns a list of recent jobs ordered by creation time. Optional query param 'limit' controls the number of jobs returned (default 50).",
         "operationId": "ListJobs",
         "parameters": [
           {
@@ -190,7 +271,39 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JobStatusResponse"
+                  }
+                },
+                "example": [
+                  {
+                    "jobId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "type": "Analysis",
+                    "status": "Completed",
+                    "createdAt": "2026-06-05T14:30:00Z",
+                    "startedAt": "2026-06-05T14:30:01Z",
+                    "completedAt": "2026-06-05T14:30:15Z",
+                    "error": null,
+                    "result": null
+                  },
+                  {
+                    "jobId": "7ca85f64-5717-4562-b3fc-2c963f66afa7",
+                    "type": "Ingest",
+                    "status": "Running",
+                    "createdAt": "2026-06-05T14:32:00Z",
+                    "startedAt": "2026-06-05T14:32:01Z",
+                    "completedAt": null,
+                    "error": null,
+                    "result": null
+                  }
+                ]
+              }
+            }
           }
         }
       }
@@ -201,7 +314,7 @@
           "Detector"
         ],
         "summary": "Get job status and result",
-        "description": "Poll this endpoint until status is completed or failed.",
+        "description": "Poll this endpoint until status is 'Completed' or 'Failed'. The 'result' field contains the analysis output when complete.",
         "operationId": "GetJob",
         "parameters": [
           {
@@ -216,7 +329,95 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobStatusResponse"
+                },
+                "example": {
+                  "jobId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "type": "Analysis",
+                  "status": "Completed",
+                  "createdAt": "2026-06-05T14:30:00Z",
+                  "startedAt": "2026-06-05T14:30:01Z",
+                  "completedAt": "2026-06-05T14:30:15Z",
+                  "error": null,
+                  "result": {
+                    "duplications": [
+                      {
+                        "type": "Semantic",
+                        "similarityScore": 0.92,
+                        "source": {
+                          "fileName": "policy-v1.pdf",
+                          "pageNumber": "3"
+                        },
+                        "target": {
+                          "fileName": "handbook.docx",
+                          "pageNumber": "12"
+                        },
+                        "sourceExcerpt": "Employees must submit expense reports within 30 days...",
+                        "targetExcerpt": "All expense claims should be filed no later than one month...",
+                        "explanation": "Similarity score: 92.0%"
+                      }
+                    ],
+                    "conflicts": [
+                      {
+                        "type": "PolicyConflict",
+                        "severity": "High",
+                        "source": {
+                          "fileName": "policy-2024.pdf"
+                        },
+                        "target": {
+                          "fileName": "policy-2023.pdf"
+                        },
+                        "sourceStatement": "Remote work is permitted 3 days per week",
+                        "targetStatement": "All employees must work on-site 5 days per week",
+                        "explanation": "Direct contradiction in remote work policy",
+                        "resolution": "Retire the 2023 policy document"
+                      }
+                    ],
+                    "inconsistencies": [
+                      {
+                        "type": "Terminology",
+                        "variants": [
+                          "PTO",
+                          "Paid Time Off",
+                          "Annual Leave"
+                        ],
+                        "occurrences": [
+                          {
+                            "fileName": "hr-guide.pdf"
+                          },
+                          {
+                            "fileName": "employee-handbook.docx"
+                          }
+                        ],
+                        "explanation": "Same concept referred to by different names",
+                        "suggestedStandard": "PTO (Paid Time Off)"
+                      }
+                    ],
+                    "metrics": {
+                      "totalChunks": 142,
+                      "duplicationsFound": 1,
+                      "conflictsFound": 1,
+                      "inconsistenciesFound": 1,
+                      "totalDuration": "00:00:14.523"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -249,6 +450,163 @@
         },
         "additionalProperties": false,
         "description": "Request body for chat against the knowledge base."
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "openAiConfigured": {
+            "type": "boolean"
+          },
+          "knowledgeBaseExists": {
+            "type": "boolean"
+          },
+          "chunkCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false,
+        "description": "API health check response."
+      },
+      "HttpValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "JobAcceptedResponse": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/JobType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "statusUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Summary returned when a job is accepted."
+      },
+      "JobStatus": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "description": "Status of a background job.",
+        "format": "int32"
+      },
+      "JobStatusResponse": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/JobType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "result": {
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Full job state including result when complete."
+      },
+      "JobType": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "description": "Type of background operation.",
+        "format": "int32"
+      },
+      "KnowledgeBaseStatusResponse": {
+        "type": "object",
+        "properties": {
+          "exists": {
+            "type": "boolean"
+          },
+          "chunkCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "persistPath": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Knowledge base status."
       }
     }
   }

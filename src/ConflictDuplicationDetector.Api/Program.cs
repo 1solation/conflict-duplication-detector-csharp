@@ -1,5 +1,6 @@
 using ConflictDuplicationDetector.Api.Endpoints;
 using ConflictDuplicationDetector.Api.Services;
+using ConflictDuplicationDetector.Api.Swagger;
 using ConflictDuplicationDetector.Core.DependencyInjection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.OpenApi.Models;
@@ -37,6 +38,8 @@ builder.Services.AddSwaggerGen(options =>
         Type = "string",
         Format = "binary"
     });
+
+    options.OperationFilter<SwaggerExamplesFilter>();
 });
 
 builder.Services.Configure<FormOptions>(options =>
