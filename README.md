@@ -239,6 +239,53 @@ Override paths via environment variables:
 | `OPENAI_API_KEY`           | (required)           |
 
 
+## Deployment
+
+### Deploy to Azure
+
+The API can be deployed as a container to Azure Container Apps or Azure Container Instances. See the full deployment guide: **[deployments/azure/README.md](deployments/azure/README.md)**
+
+#### Quick Start (Azure Container Apps)
+
+```bash
+# Build and push to Azure Container Registry
+az acr create --resource-group rg-conflict-detector --name crconflictdetector --sku Basic
+az acr login --name crconflictdetector
+docker build -t crconflictdetector.azurecr.io/conflict-detector:latest .
+docker push crconflictdetector.azurecr.io/conflict-detector:latest
+
+# Deploy to Container Apps (see full guide for storage setup)
+az containerapp create \
+  --name ca-conflict-detector \
+  --resource-group rg-conflict-detector \
+  --image crconflictdetector.azurecr.io/conflict-detector:latest \
+  --target-port 8080 \
+  --ingress external \
+  --env-vars "OPENAI_API_KEY=secretref:openai-key" \
+  --secrets "openai-key=YOUR_KEY"
+```
+
+#### Setting Environment Variables in Azure Portal
+
+1. Navigate to **Container Apps** → your app → **Containers**
+2. Click **Edit and deploy** → scroll to **Environment variables**
+3. Add variables (use `__` for nested config, e.g., `OpenAI__Model`):
+
+| Variable | Description |
+|----------|-------------|
+| `OPENAI_API_KEY` | OpenAI API key (use secret reference) |
+| `OpenAI__Model` | Model name (default: `gpt-4o`) |
+| `OpenAI__EmbeddingModel` | Embedding model (default: `text-embedding-3-small`) |
+| `VectorStore__PersistPath` | Vector store path (default: `/data/vectors.json`) |
+| `Storage__UploadsPath` | Uploads path (default: `/data/uploads`) |
+| `Analysis__DuplicationThreshold` | Similarity threshold (default: `0.85`) |
+
+4. Click **Create** to deploy
+
+For Azure OpenAI, also set `OpenAI__AzureEndpoint` and `OpenAI__AzureApiVersion`.
+
+---
+
 ## Configuration
 
 Configuration can be set via `appsettings.json` or environment variables:
@@ -268,11 +315,23 @@ Configuration can be set via `appsettings.json` or environment variables:
 
 ### Environment Variables
 
+Environment variables use double underscores (`__`) for nested configuration (e.g., `OpenAI__Model` maps to `OpenAI.Model`).
 
-| Variable                | Description                      |
-| ----------------------- | -------------------------------- |
-| `OPENAI_API_KEY`        | OpenAI API key (required)        |
-| `AZURE_OPENAI_ENDPOINT` | Azure OpenAI endpoint (optional) |
+| Variable | Description | Default |
+| -------- | ----------- | ------- |
+| `OPENAI_API_KEY` | OpenAI API key (required) | - |
+| `OpenAI__Model` | Chat model for analysis | `gpt-4o` |
+| `OpenAI__EmbeddingModel` | Embedding model | `text-embedding-3-small` |
+| `OpenAI__AzureEndpoint` | Azure OpenAI endpoint | `null` |
+| `OpenAI__AzureApiVersion` | Azure OpenAI API version | `2024-02-01` |
+| `VectorStore__PersistPath` | Vector store file path | `/data/vectors.json` |
+| `VectorStore__MaxSearchResults` | Max vector search results | `10` |
+| `Storage__UploadsPath` | Upload directory path | `/data/uploads` |
+| `Analysis__DuplicationThreshold` | Similarity threshold (0-1) | `0.85` |
+| `Analysis__ChunkSize` | Document chunk size | `512` |
+| `Analysis__ChunkOverlap` | Chunk overlap | `50` |
+| `Analysis__MaxConcurrentAgents` | Max parallel agents | `3` |
+| `Jobs__RetentionHours` | Job result retention | `24` |
 
 
 ## Project Structure
@@ -294,6 +353,8 @@ ConflictDuplicationDetector/
 │       ├── Endpoints/        # REST API
 │       ├── Services/         # Job queue, application layer
 │       └── Program.cs        # API + Swagger
+├── deployments/
+│   └── azure/                # Azure Container Apps/ACI deployment guide
 ├── Dockerfile
 ├── docker-compose.yml
 └── tests/
