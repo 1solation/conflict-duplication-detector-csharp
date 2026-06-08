@@ -28,7 +28,7 @@ public static class ApiEndpoints
             .WithSummary("Ingest documents")
             .WithDescription("""
                 Upload one or more documents and enqueue ingestion into the knowledge base. Returns 202 with a job ID.
-                
+
                 **Supported file formats:**
                 - PDF (.pdf) - `application/pdf`
                 - Word (.docx) - `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
@@ -50,13 +50,13 @@ public static class ApiEndpoints
             .WithSummary("Check a file against the knowledge base")
             .WithDescription("""
                 Upload a file and compare it against the ingested knowledge base without adding it. Returns 202 with a job ID.
-                
+
                 **Supported file formats:**
                 - PDF (.pdf) - `application/pdf`
                 - Word (.docx) - `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
                 - HTML (.html, .htm) - `text/html`
                 - Plain text (.txt) - `text/plain`
-                
+
                 **Query parameters:**
                 - `type` (optional): 'all', 'duplications', 'conflicts', or 'inconsistencies' (default: 'all')
                 """)
@@ -65,7 +65,7 @@ public static class ApiEndpoints
 
         api.MapPost("/chat", StartChat)
             .WithName("StartChat")
-            .WithSummary("Chat with the knowledge base")
+            .WithSummary("Chat with the knowledge base - streaming not supported by DfE AI API yet")
             .WithDescription("Enqueue a natural-language query against ingested documents. Returns 202 with a job ID. The system auto-routes queries: use words like 'duplicate/copy' for duplication analysis, 'conflict/contradict' for conflict analysis, 'terminology/format' for inconsistency analysis.")
             .Accepts<ChatJobRequest>("application/json")
             .Produces<JobAcceptedResponse>(StatusCodes.Status202Accepted);
