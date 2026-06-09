@@ -2,7 +2,9 @@ using System.Text.Json;
 using Build5Nines.SharpVector;
 using Build5Nines.SharpVector.OpenAI;
 using ConflictDuplicationDetector.Core.Models;
+using ConflictDuplicationDetector.Core.Services;
 using OpenAI;
+using OpenAI.Embeddings;
 
 namespace ConflictDuplicationDetector.Core.VectorStore;
 
@@ -12,7 +14,20 @@ public class SharpVectorStore : IVectorStore
     private readonly Dictionary<string, ChunkMetadata> _metadataStore = new();
     private readonly HashSet<string> _contentHashes = new();
     private readonly object _lock = new();
+
+    public SharpVectorStore(OpenAIConfiguration config)
+    {
+        var factory = new AIClientFactory();
+        var embeddingClient = factory.CreateEmbeddingClient(config);
+        _vectorDb = new OpenAIMemoryVectorDatabase<ChunkMetadata>(embeddingClient);
+    }
     
+    public SharpVectorStore(EmbeddingClient embeddingClient)
+    {
+        _vectorDb = new OpenAIMemoryVectorDatabase<ChunkMetadata>(embeddingClient);
+    }
+    
+    [Obsolete("Use constructor with OpenAIConfiguration instead for full provider support")]
     public SharpVectorStore(string openAiApiKey, string embeddingModel = "text-embedding-3-small")
     {
         var openAIClient = new OpenAIClient(openAiApiKey);

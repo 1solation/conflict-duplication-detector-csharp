@@ -17,16 +17,18 @@ The application can be configured entirely through environment variables, making
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `OPENAI_API_KEY` | Your OpenAI API key | `sk-...` |
+| `OPENAI_API_KEY` | Your OpenAI or Azure OpenAI API key | `sk-...` or Azure key |
 
 ### Optional Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `OpenAI__Model` | OpenAI model for analysis | `gpt-4o` |
+| `OpenAI__Provider` | AI provider: `OpenAI` or `AzureOpenAI` | `OpenAI` |
+| `OpenAI__Model` | Model deployment name for analysis | `gpt-4o` |
 | `OpenAI__EmbeddingModel` | Model for embeddings | `text-embedding-3-small` |
-| `OpenAI__AzureEndpoint` | Azure OpenAI endpoint (if using Azure OpenAI) | `null` |
+| `OpenAI__AzureEndpoint` | Azure OpenAI endpoint URL | `null` |
 | `OpenAI__AzureApiVersion` | Azure OpenAI API version | `2024-02-01` |
+| `OpenAI__ApiKeyHeader` | Custom API key header name (e.g., `Api-Key`) | `null` |
 | `VectorStore__PersistPath` | Path to persist vector store | `/data/vectors.json` |
 | `VectorStore__MaxSearchResults` | Max results from vector search | `10` |
 | `Storage__UploadsPath` | Path for uploaded files | `/data/uploads` |
@@ -226,22 +228,41 @@ If you're using Azure OpenAI Service instead of the public OpenAI API:
 
 ```bash
 # Set these environment variables
+OpenAI__Provider=AzureOpenAI
 OpenAI__AzureEndpoint=https://your-resource.openai.azure.com/
 OpenAI__AzureApiVersion=2024-02-01
 OpenAI__Model=your-deployment-name
 OpenAI__EmbeddingModel=your-embedding-deployment-name
 OPENAI_API_KEY=your-azure-openai-key
+
+# If using a custom API key header (e.g., DfE sandbox)
+OpenAI__ApiKeyHeader=Api-Key
 ```
 
 In Azure Portal, add these as environment variables:
 
 | Name | Value |
 |------|-------|
+| `OpenAI__Provider` | `AzureOpenAI` |
 | `OpenAI__AzureEndpoint` | `https://your-resource.openai.azure.com/` |
 | `OpenAI__AzureApiVersion` | `2024-02-01` |
 | `OpenAI__Model` | Your deployed model name |
 | `OpenAI__EmbeddingModel` | Your embedding model deployment name |
+| `OpenAI__ApiKeyHeader` | Custom header name (e.g., `Api-Key`) - optional |
 | `OPENAI_API_KEY` | (use secret reference) |
+
+### Example: DfE Education Sandbox
+
+For the Department for Education OpenAI sandbox:
+
+```bash
+OpenAI__Provider=AzureOpenAI
+OpenAI__AzureEndpoint=https://api.education.gov.uk/sandbox/openai
+OpenAI__ApiKeyHeader=Api-Key
+OpenAI__Model=gpt-4o
+OpenAI__EmbeddingModel=text-embedding-3-small
+OPENAI_API_KEY=your-dfe-api-key
+```
 
 ---
 

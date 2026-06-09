@@ -13,14 +13,23 @@ public class StorageConfiguration
     public string UploadsPath { get; set; } = "./data/uploads";
 }
 
+public enum AIProvider
+{
+    OpenAI,
+    AzureOpenAI
+}
+
 public class OpenAIConfiguration
 {
     public string ApiKey { get; set; } = string.Empty;
+    public AIProvider Provider { get; set; } = AIProvider.OpenAI;
     public string? AzureEndpoint { get; set; }
-    public string? AzureApiVersion { get; set; }
-    public string Model { get; set; } = "gpt-5-nano";
+    public string? AzureApiVersion { get; set; } = "2024-02-01";
+    public string? ApiKeyHeader { get; set; }
+    public string Model { get; set; } = "gpt-4o";
     public string EmbeddingModel { get; set; } = "text-embedding-3-small";
-    public bool UseAzure => !string.IsNullOrEmpty(AzureEndpoint);
+    
+    public bool UseAzure => Provider == AIProvider.AzureOpenAI || !string.IsNullOrEmpty(AzureEndpoint);
 }
 
 public class VectorStoreConfiguration

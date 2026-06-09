@@ -3,38 +3,39 @@ using ConflictDuplicationDetector.Core.Models;
 using ConflictDuplicationDetector.Core.Services;
 using ConflictDuplicationDetector.Core.VectorStore;
 using Microsoft.Extensions.AI;
-using OpenAI;
 
 namespace ConflictDuplicationDetector.Cli.Commands;
 
 public class ChatCommand : Command
 {
-    public ChatCommand() : base("chat", "Start interactive chat session for document analysis")
+    public ChatCommand(Option<string?> providerOption) : base("chat", "Start interactive chat session for document analysis")
     {
         var configOption = new Option<string?>("--config", "Path to configuration file");
 
         AddOption(configOption);
 
-        this.SetHandler(ExecuteAsync, configOption);
+        this.SetHandler(ExecuteAsync, configOption, providerOption);
     }
 
-    private async Task ExecuteAsync(string? configPath)
+    private async Task ExecuteAsync(string? configPath, string? provider)
     {
         Console.WriteLine("Interactive Document Analysis Chat");
         Console.WriteLine("===================================");
         Console.WriteLine();
 
-        var config = ConfigurationLoader.Load(configPath);
+        var config = ConfigurationLoader.Load(configPath, provider);
 
         if (string.IsNullOrEmpty(config.OpenAI.ApiKey))
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Error: OpenAI API key not configured. Set OPENAI_API_KEY environment variable or configure in appsettings.json");
+            Console.WriteLine("Error: API key not configured. Set OPENAI_API_KEY environment variable or configure in appsettings.json");
             Console.ResetColor();
             return;
         }
 
-        var vectorStore = new SharpVectorStore(config.OpenAI.ApiKey, config.OpenAI.EmbeddingModel);
+        PrintProviderInfo(config);
+
+        var vectorStore = new SharpVectorStore(config.OpenAI);
 
         if (File.Exists(config.VectorStore.PersistPath))
         {
@@ -58,8 +59,8 @@ public class ChatCommand : Command
         Console.WriteLine("  'exit' or 'quit' - Exit the chat");
         Console.WriteLine();
 
-        var openAiClient = new OpenAIClient(config.OpenAI.ApiKey);
-        var chatClient = openAiClient.GetChatClient(config.OpenAI.Model).AsIChatClient();
+        var clientFactory = new AIClientFactory();
+        var chatClient = clientFactory.CreateChatClient(config.OpenAI);
         var metricsTracker = new MetricsTracker();
 
         var analysisService = new AnalysisService(
@@ -171,6 +172,18 @@ public class ChatCommand : Command
             Console.WriteLine($"  Total network time: {totalNetworkTime}ms");
         }
 
+        Console.WriteLine();
+    }
+
+    private static void PrintProviderInfo(AppConfiguration config)
+    {
+        Console.ForegroundColor = ConsoleColor.DarkCyan;
+        Console.WriteLine($"Provider: {config.OpenAI.Provider}");
+        if (config.OpenAI.UseAzure && !string.IsNullOrEmpty(config.OpenAI.AzureEndpoint))
+        {
+            Console.WriteLine($"Endpoint: {config.OpenAI.AzureEndpoint}");
+        }
+        Console.ResetColor();
         Console.WriteLine();
     }
 }

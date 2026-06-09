@@ -4,13 +4,12 @@ using ConflictDuplicationDetector.Core.Models;
 using ConflictDuplicationDetector.Core.Services;
 using ConflictDuplicationDetector.Core.VectorStore;
 using Microsoft.Extensions.AI;
-using OpenAI;
 
 namespace ConflictDuplicationDetector.Cli.Commands;
 
 public class CheckCommand : Command
 {
-    public CheckCommand() : base("check", "Analyse a file against the existing knowledge base for conflicts, duplications, and inconsistencies")
+    public CheckCommand(Option<string?> providerOption) : base("check", "Analyse a file against the existing knowledge base for conflicts, duplications, and inconsistencies")
     {
         var fileArgument = new Argument<string>("file", "Path to the file to analyse against the knowledge base");
         var typeOption = new Option<string?>("--type", "Analysis type: all, duplications, conflicts, inconsistencies");
@@ -22,10 +21,10 @@ public class CheckCommand : Command
         AddOption(outputOption);
         AddOption(configOption);
 
-        this.SetHandler(ExecuteAsync, fileArgument, typeOption, outputOption, configOption);
+        this.SetHandler(ExecuteAsync, fileArgument, typeOption, outputOption, configOption, providerOption);
     }
 
-    private async Task ExecuteAsync(string filePath, string? type, string? outputPath, string? configPath)
+    private async Task ExecuteAsync(string filePath, string? type, string? outputPath, string? configPath, string? provider)
     {
         Console.WriteLine("File Analysis Against Knowledge Base");
         Console.WriteLine("=====================================");
@@ -38,17 +37,19 @@ public class CheckCommand : Command
             return;
         }
 
-        var config = ConfigurationLoader.Load(configPath);
+        var config = ConfigurationLoader.Load(configPath, provider);
 
         if (string.IsNullOrEmpty(config.OpenAI.ApiKey))
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Error: OpenAI API key not configured. Set OPENAI_API_KEY environment variable or configure in appsettings.json");
+            Console.WriteLine("Error: API key not configured. Set OPENAI_API_KEY environment variable or configure in appsettings.json");
             Console.ResetColor();
             return;
         }
 
-        var vectorStore = new SharpVectorStore(config.OpenAI.ApiKey, config.OpenAI.EmbeddingModel);
+        PrintProviderInfo(config);
+
+        var vectorStore = new SharpVectorStore(config.OpenAI);
 
         if (!File.Exists(config.VectorStore.PersistPath))
         {
@@ -91,8 +92,8 @@ public class CheckCommand : Command
 
         Console.WriteLine($"File parsed into {fileChunks.Count} chunks.");
 
-        var openAiClient = new OpenAIClient(config.OpenAI.ApiKey);
-        var chatClient = openAiClient.GetChatClient(config.OpenAI.Model).AsIChatClient();
+        var clientFactory = new AIClientFactory();
+        var chatClient = clientFactory.CreateChatClient(config.OpenAI);
         var metricsTracker = new MetricsTracker();
 
         var analysisService = new FileAnalysisService(
@@ -344,5 +345,17 @@ public class CheckCommand : Command
             return cleaned;
 
         return cleaned.Substring(0, maxLength - 3) + "...";
+    }
+
+    private static void PrintProviderInfo(AppConfiguration config)
+    {
+        Console.ForegroundColor = ConsoleColor.DarkCyan;
+        Console.WriteLine($"Provider: {config.OpenAI.Provider}");
+        if (config.OpenAI.UseAzure && !string.IsNullOrEmpty(config.OpenAI.AzureEndpoint))
+        {
+            Console.WriteLine($"Endpoint: {config.OpenAI.AzureEndpoint}");
+        }
+        Console.ResetColor();
+        Console.WriteLine();
     }
 }

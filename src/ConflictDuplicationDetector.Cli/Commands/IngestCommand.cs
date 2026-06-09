@@ -8,7 +8,7 @@ namespace ConflictDuplicationDetector.Cli.Commands;
 
 public class IngestCommand : Command
 {
-    public IngestCommand() : base("ingest", "Ingest documents into the vector store")
+    public IngestCommand(Option<string?> providerOption) : base("ingest", "Ingest documents into the vector store")
     {
         var pathArgument = new Argument<string>("path", "Path to file or directory to ingest");
         var recursiveOption = new Option<bool>("--recursive", () => true, "Recursively process subdirectories");
@@ -18,27 +18,29 @@ public class IngestCommand : Command
         AddOption(recursiveOption);
         AddOption(configOption);
         
-        this.SetHandler(ExecuteAsync, pathArgument, recursiveOption, configOption);
+        this.SetHandler(ExecuteAsync, pathArgument, recursiveOption, configOption, providerOption);
     }
     
-    private async Task ExecuteAsync(string path, bool recursive, string? configPath)
+    private async Task ExecuteAsync(string path, bool recursive, string? configPath, string? provider)
     {
         Console.WriteLine("Document Ingestion");
         Console.WriteLine("==================");
         
-        var config = ConfigurationLoader.Load(configPath);
+        var config = ConfigurationLoader.Load(configPath, provider);
         
         if (string.IsNullOrEmpty(config.OpenAI.ApiKey))
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Error: OpenAI API key not configured. Set OPENAI_API_KEY environment variable or configure in appsettings.json");
+            Console.WriteLine("Error: API key not configured. Set OPENAI_API_KEY environment variable or configure in appsettings.json");
             Console.ResetColor();
             return;
         }
+
+        PrintProviderInfo(config);
         
         var parserFactory = new DocumentParserFactory();
         var chunker = new DocumentChunker();
-        var vectorStore = new SharpVectorStore(config.OpenAI.ApiKey, config.OpenAI.EmbeddingModel);
+        var vectorStore = new SharpVectorStore(config.OpenAI);
         
         if (File.Exists(config.VectorStore.PersistPath))
         {
@@ -95,5 +97,17 @@ public class IngestCommand : Command
             Console.WriteLine("\nIngestion completed successfully!");
             Console.ResetColor();
         }
+    }
+
+    private static void PrintProviderInfo(AppConfiguration config)
+    {
+        Console.ForegroundColor = ConsoleColor.DarkCyan;
+        Console.WriteLine($"Provider: {config.OpenAI.Provider}");
+        if (config.OpenAI.UseAzure && !string.IsNullOrEmpty(config.OpenAI.AzureEndpoint))
+        {
+            Console.WriteLine($"Endpoint: {config.OpenAI.AzureEndpoint}");
+        }
+        Console.ResetColor();
+        Console.WriteLine();
     }
 }

@@ -140,7 +140,7 @@ dotnet run --project src/ConflictDuplicationDetector.Cli -- check ./documents/ne
 | `--config` | Path to configuration file                                                               |
 
 
-`**analyse` vs `check**`: `analyse` scans the entire ingested collection for issues within the knowledge base. `check` compares one target file against that collection—duplications are found via vector similarity to other documents, while conflicts and inconsistencies use AI to compare the file content with relevant knowledge-base context.
+`analyse` vs `check`: `analyse` scans the entire ingested collection for issues within the knowledge base. `check` compares one target file against that collection—duplications are found via vector similarity to other documents, while conflicts and inconsistencies use AI to compare the file content with relevant knowledge-base context.
 
 ### Interactive Chat
 
@@ -159,7 +159,7 @@ Example chat queries:
 
 ## HTTP API
 
-The API wraps the same Core services as the CLI. Long-running operations return **202 Accepted** with a job ID; poll `**GET /api/jobs/{jobId}`** until the status is `completed` or `failed`.
+The API wraps the same Core services as the CLI. Long-running operations return **202 Accepted** with a job ID; poll `GET /api/jobs/{jobId}` until the status is `completed` or `failed`.
 
 ### Run locally
 
@@ -294,9 +294,12 @@ Configuration can be set via `appsettings.json` or environment variables:
 {
   "OpenAI": {
     "ApiKey": "env:OPENAI_API_KEY",
-    "Model": "gpt-5-nano",
+    "Provider": "OpenAI",
+    "Model": "gpt-4o",
     "EmbeddingModel": "text-embedding-3-small",
-    "AzureEndpoint": null
+    "AzureEndpoint": null,
+    "AzureApiVersion": "2024-02-01",
+    "ApiKeyHeader": null
   },
   "VectorStore": {
     "PersistPath": "./data/vectors.json",
@@ -319,11 +322,13 @@ Environment variables use double underscores (`__`) for nested configuration (e.
 
 | Variable | Description | Default |
 | -------- | ----------- | ------- |
-| `OPENAI_API_KEY` | OpenAI API key (required) | - |
+| `OPENAI_API_KEY` | OpenAI/Azure OpenAI API key (required) | - |
+| `OpenAI__Provider` | AI provider: `OpenAI` or `AzureOpenAI` | `OpenAI` |
 | `OpenAI__Model` | Chat model for analysis | `gpt-4o` |
 | `OpenAI__EmbeddingModel` | Embedding model | `text-embedding-3-small` |
-| `OpenAI__AzureEndpoint` | Azure OpenAI endpoint | `null` |
+| `OpenAI__AzureEndpoint` | Azure OpenAI endpoint URL | `null` |
 | `OpenAI__AzureApiVersion` | Azure OpenAI API version | `2024-02-01` |
+| `OpenAI__ApiKeyHeader` | Custom API key header name | `null` |
 | `VectorStore__PersistPath` | Vector store file path | `/data/vectors.json` |
 | `VectorStore__MaxSearchResults` | Max vector search results | `10` |
 | `Storage__UploadsPath` | Upload directory path | `/data/uploads` |
@@ -332,6 +337,44 @@ Environment variables use double underscores (`__`) for nested configuration (e.
 | `Analysis__ChunkOverlap` | Chunk overlap | `50` |
 | `Analysis__MaxConcurrentAgents` | Max parallel agents | `3` |
 | `Jobs__RetentionHours` | Job result retention | `24` |
+
+### Using Azure OpenAI
+
+To use Azure OpenAI instead of direct OpenAI:
+
+**Via CLI:**
+```bash
+export OPENAI_API_KEY="your-azure-api-key"
+export OpenAI__AzureEndpoint="https://api.education.gov.uk/sandbox/openai"
+export OpenAI__ApiKeyHeader="Api-Key"
+
+# Use the --provider flag
+dotnet run --project src/ConflictDuplicationDetector.Cli -- --provider AzureOpenAI analyse
+dotnet run --project src/ConflictDuplicationDetector.Cli -- -p AzureOpenAI ingest ./documents
+```
+
+**Via appsettings.json:**
+```json
+{
+  "OpenAI": {
+    "ApiKey": "env:OPENAI_API_KEY",
+    "Provider": "AzureOpenAI",
+    "Model": "gpt-4o",
+    "EmbeddingModel": "text-embedding-3-small",
+    "AzureEndpoint": "https://api.education.gov.uk/sandbox/openai",
+    "AzureApiVersion": "2024-02-01",
+    "ApiKeyHeader": "Api-Key"
+  }
+}
+```
+
+**Via environment variables (Docker/Azure):**
+```bash
+export OPENAI_API_KEY="your-azure-api-key"
+export OpenAI__Provider="AzureOpenAI"
+export OpenAI__AzureEndpoint="https://api.education.gov.uk/sandbox/openai"
+export OpenAI__ApiKeyHeader="Api-Key"
+```
 
 
 ## Project Structure

@@ -13,9 +13,16 @@ public static class ConfigurationLoader
 
         appConfig.OpenAI.ApiKey = GetConfigValue(configuration, "OpenAI:ApiKey", "OPENAI_API_KEY") ?? string.Empty;
         appConfig.OpenAI.AzureEndpoint = GetConfigValue(configuration, "OpenAI:AzureEndpoint", "AZURE_OPENAI_ENDPOINT");
-        appConfig.OpenAI.AzureApiVersion = configuration["OpenAI:AzureApiVersion"];
+        appConfig.OpenAI.AzureApiVersion = configuration["OpenAI:AzureApiVersion"] ?? "2024-02-01";
+        appConfig.OpenAI.ApiKeyHeader = configuration["OpenAI:ApiKeyHeader"];
         appConfig.OpenAI.Model = configuration["OpenAI:Model"] ?? "gpt-4o";
         appConfig.OpenAI.EmbeddingModel = configuration["OpenAI:EmbeddingModel"] ?? "text-embedding-3-small";
+        
+        var providerStr = configuration["OpenAI:Provider"];
+        if (!string.IsNullOrEmpty(providerStr) && Enum.TryParse<AIProvider>(providerStr, ignoreCase: true, out var provider))
+        {
+            appConfig.OpenAI.Provider = provider;
+        }
 
         appConfig.VectorStore.PersistPath = configuration["VectorStore:PersistPath"] ?? "./data/vectors.json";
         if (int.TryParse(configuration["VectorStore:MaxSearchResults"], out var maxResults))

@@ -3,13 +3,12 @@ using ConflictDuplicationDetector.Core.Models;
 using ConflictDuplicationDetector.Core.Services;
 using ConflictDuplicationDetector.Core.VectorStore;
 using Microsoft.Extensions.AI;
-using OpenAI;
 
 namespace ConflictDuplicationDetector.Cli.Commands;
 
 public class AnalyzeCommand : Command
 {
-    public AnalyzeCommand() : base("analyse", "Analyse documents for conflicts, duplications, and inconsistencies")
+    public AnalyzeCommand(Option<string?> providerOption) : base("analyse", "Analyse documents for conflicts, duplications, and inconsistencies")
     {
         var typeOption = new Option<string?>("--type", "Analysis type: all, duplications, conflicts, inconsistencies");
         var topicOption = new Option<string?>("--topic", "Focus topic for analysis");
@@ -21,25 +20,27 @@ public class AnalyzeCommand : Command
         AddOption(outputOption);
         AddOption(configOption);
 
-        this.SetHandler(ExecuteAsync, typeOption, topicOption, outputOption, configOption);
+        this.SetHandler(ExecuteAsync, typeOption, topicOption, outputOption, configOption, providerOption);
     }
 
-    private async Task ExecuteAsync(string? type, string? topic, string? outputPath, string? configPath)
+    private async Task ExecuteAsync(string? type, string? topic, string? outputPath, string? configPath, string? provider)
     {
         Console.WriteLine("Document Analysis");
         Console.WriteLine("=================");
 
-        var config = ConfigurationLoader.Load(configPath);
+        var config = ConfigurationLoader.Load(configPath, provider);
 
         if (string.IsNullOrEmpty(config.OpenAI.ApiKey))
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Error: OpenAI API key not configured. Set OPENAI_API_KEY environment variable or configure in appsettings.json");
+            Console.WriteLine("Error: API key not configured. Set OPENAI_API_KEY environment variable or configure in appsettings.json");
             Console.ResetColor();
             return;
         }
 
-        var vectorStore = new SharpVectorStore(config.OpenAI.ApiKey, config.OpenAI.EmbeddingModel);
+        PrintProviderInfo(config);
+
+        var vectorStore = new SharpVectorStore(config.OpenAI);
 
         if (!File.Exists(config.VectorStore.PersistPath))
         {
@@ -63,8 +64,8 @@ public class AnalyzeCommand : Command
         Console.WriteLine($"Loaded {chunkCount} document chunks from vector store.");
         Console.WriteLine();
 
-        var openAiClient = new OpenAIClient(config.OpenAI.ApiKey);
-        var chatClient = openAiClient.GetChatClient(config.OpenAI.Model).AsIChatClient();
+        var clientFactory = new AIClientFactory();
+        var chatClient = clientFactory.CreateChatClient(config.OpenAI);
         var metricsTracker = new MetricsTracker();
 
         var analysisService = new AnalysisService(
@@ -331,5 +332,17 @@ public class AnalyzeCommand : Command
                 Console.WriteLine($"    Tokens: {agent.TotalTokens:N0} (input: {agent.TotalInputTokens:N0}, output: {agent.TotalOutputTokens:N0})");
             }
         }
+    }
+
+    private static void PrintProviderInfo(AppConfiguration config)
+    {
+        Console.ForegroundColor = ConsoleColor.DarkCyan;
+        Console.WriteLine($"Provider: {config.OpenAI.Provider}");
+        if (config.OpenAI.UseAzure && !string.IsNullOrEmpty(config.OpenAI.AzureEndpoint))
+        {
+            Console.WriteLine($"Endpoint: {config.OpenAI.AzureEndpoint}");
+        }
+        Console.ResetColor();
+        Console.WriteLine();
     }
 }

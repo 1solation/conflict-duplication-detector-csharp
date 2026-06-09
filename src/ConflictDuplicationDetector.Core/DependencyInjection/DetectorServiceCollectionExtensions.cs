@@ -6,7 +6,6 @@ using ConflictDuplicationDetector.Core.VectorStore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using OpenAI;
 
 namespace ConflictDuplicationDetector.Core.DependencyInjection;
 
@@ -23,10 +22,12 @@ public static class DetectorServiceCollectionExtensions
         services.AddSingleton(appConfig.Analysis);
         services.AddSingleton(appConfig.Storage);
 
+        services.AddSingleton<IAIClientFactory, AIClientFactory>();
+
         services.AddSingleton<IVectorStore>(sp =>
         {
             var config = sp.GetRequiredService<AppConfiguration>();
-            return new SharpVectorStore(config.OpenAI.ApiKey, config.OpenAI.EmbeddingModel);
+            return new SharpVectorStore(config.OpenAI);
         });
 
         services.AddSingleton<IVectorStoreCoordinator, VectorStoreCoordinator>();
@@ -43,8 +44,8 @@ public static class DetectorServiceCollectionExtensions
         services.AddSingleton<IChatClient>(sp =>
         {
             var config = sp.GetRequiredService<AppConfiguration>();
-            var openAiClient = new OpenAIClient(config.OpenAI.ApiKey);
-            return openAiClient.GetChatClient(config.OpenAI.Model).AsIChatClient();
+            var factory = sp.GetRequiredService<IAIClientFactory>();
+            return factory.CreateChatClient(config.OpenAI);
         });
 
         services.AddSingleton<IDocumentIngestionService, DocumentIngestionService>();
