@@ -9,6 +9,8 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
+
 builder.Services.AddConflictDuplicationDetector(builder.Configuration);
 builder.Services.AddSingleton<DetectorApplicationService>();
 builder.Services.AddSingleton<IJobService, JobService>();

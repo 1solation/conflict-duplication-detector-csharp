@@ -51,20 +51,31 @@ public static class ConfigurationLoader
 
         var builder = new ConfigurationBuilder();
         var basePath = AppContext.BaseDirectory;
-        var defaultConfigPath = Path.Combine(basePath, "appsettings.json");
+        var currentDir = Directory.GetCurrentDirectory();
 
-        if (File.Exists(defaultConfigPath))
-            builder.AddJsonFile(defaultConfigPath, optional: true);
+        AddJsonFileIfExists(builder, Path.Combine(basePath, "appsettings.json"));
 
-        var currentDirConfig = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
-        if (File.Exists(currentDirConfig) && currentDirConfig != defaultConfigPath)
-            builder.AddJsonFile(currentDirConfig, optional: true);
+        var currentDirConfig = Path.Combine(currentDir, "appsettings.json");
+        if (currentDirConfig != Path.Combine(basePath, "appsettings.json"))
+            AddJsonFileIfExists(builder, currentDirConfig);
+
+        AddJsonFileIfExists(builder, Path.Combine(basePath, "appsettings.local.json"));
+
+        var currentDirLocalConfig = Path.Combine(currentDir, "appsettings.local.json");
+        if (currentDirLocalConfig != Path.Combine(basePath, "appsettings.local.json"))
+            AddJsonFileIfExists(builder, currentDirLocalConfig);
 
         if (!string.IsNullOrEmpty(configPath) && File.Exists(configPath))
             builder.AddJsonFile(configPath, optional: false);
 
         builder.AddEnvironmentVariables();
         return Bind(builder.Build());
+    }
+
+    private static void AddJsonFileIfExists(ConfigurationBuilder builder, string path)
+    {
+        if (File.Exists(path))
+            builder.AddJsonFile(path, optional: true);
     }
 
     private static string? GetConfigValue(IConfiguration configuration, string configKey, string envKey)

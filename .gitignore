@@ -39,6 +39,9 @@ ScaffoldingReadMe.txt
 # dotenv environment variables file
 .env
 
+# Local configuration overrides (environment-specific settings)
+**/appsettings.local.json
+
 # Others
 ~$*
 *~
