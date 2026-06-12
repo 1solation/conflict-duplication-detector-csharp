@@ -26,7 +26,7 @@ public class FileAnalysisService : IFileAnalysisService
         _config = config;
     }
 
-    public async Task<AnalysisResult> AnalyzeFileAsync(
+    public async Task<AnalysisResult> AnalyseFileAsync(
         List<DocumentChunk> fileChunks,
         Document document,
         string analysisType = "all",
@@ -131,7 +131,7 @@ public class FileAnalysisService : IFileAnalysisService
         Document document,
         CancellationToken cancellationToken)
     {
-        var metric = _metricsTracker.StartCall("FileConflictAgent", "analyze_file");
+        var metric = _metricsTracker.StartCall("FileConflictAgent", "analyse_file");
         var calcStopwatch = Stopwatch.StartNew();
 
         var fileContent = BuildFileContext(fileChunks);
@@ -207,7 +207,7 @@ Find all contradictions, policy conflicts, and inconsistent statements between t
         Document document,
         CancellationToken cancellationToken)
     {
-        var metric = _metricsTracker.StartCall("FileInconsistencyAgent", "analyze_file");
+        var metric = _metricsTracker.StartCall("FileInconsistencyAgent", "analyse_file");
         var calcStopwatch = Stopwatch.StartNew();
 
         var fileContent = BuildFileContext(fileChunks);

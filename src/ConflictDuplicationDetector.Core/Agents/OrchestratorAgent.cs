@@ -30,9 +30,9 @@ public class OrchestratorAgent : BaseAgent
         var startTime = DateTime.UtcNow;
         var result = new AnalysisResult();
 
-        var duplicationsTask = _duplicationAgent.AnalyzeAsync(cancellationToken);
-        var conflictsTask = _conflictAgent.AnalyzeAsync(cancellationToken: cancellationToken);
-        var inconsistenciesTask = _inconsistencyAgent.AnalyzeAsync(cancellationToken: cancellationToken);
+        var duplicationsTask = _duplicationAgent.AnalyseAsync(cancellationToken);
+        var conflictsTask = _conflictAgent.AnalyseAsync(cancellationToken: cancellationToken);
+        var inconsistenciesTask = _inconsistencyAgent.AnalyseAsync(cancellationToken: cancellationToken);
 
         await Task.WhenAll(duplicationsTask, conflictsTask, inconsistenciesTask);
 
@@ -58,7 +58,7 @@ public class OrchestratorAgent : BaseAgent
         var startTime = DateTime.UtcNow;
         var result = new AnalysisResult
         {
-            Duplications = await _duplicationAgent.AnalyzeAsync(cancellationToken)
+            Duplications = await _duplicationAgent.AnalyseAsync(cancellationToken)
         };
 
         result.Metrics = new AnalysisMetrics
@@ -77,7 +77,7 @@ public class OrchestratorAgent : BaseAgent
         var startTime = DateTime.UtcNow;
         var result = new AnalysisResult
         {
-            Conflicts = await _conflictAgent.AnalyzeAsync(topic, cancellationToken)
+            Conflicts = await _conflictAgent.AnalyseAsync(topic, cancellationToken)
         };
 
         result.Metrics = new AnalysisMetrics
@@ -96,7 +96,7 @@ public class OrchestratorAgent : BaseAgent
         var startTime = DateTime.UtcNow;
         var result = new AnalysisResult
         {
-            Inconsistencies = await _inconsistencyAgent.AnalyzeAsync(focusArea, cancellationToken)
+            Inconsistencies = await _inconsistencyAgent.AnalyseAsync(focusArea, cancellationToken)
         };
 
         result.Metrics = new AnalysisMetrics
@@ -145,7 +145,7 @@ public class OrchestratorAgent : BaseAgent
 
     private async Task<ChatResponse> HandleDuplicationQueryAsync(string query, CancellationToken cancellationToken)
     {
-        var duplications = await _duplicationAgent.AnalyzeWithLlmAsync(query, cancellationToken);
+        var duplications = await _duplicationAgent.AnalyseWithLlmAsync(query, cancellationToken);
 
         return new ChatResponse
         {
@@ -157,7 +157,7 @@ public class OrchestratorAgent : BaseAgent
 
     private async Task<ChatResponse> HandleConflictQueryAsync(string query, CancellationToken cancellationToken)
     {
-        var conflicts = await _conflictAgent.AnalyzeAsync(query, cancellationToken);
+        var conflicts = await _conflictAgent.AnalyseAsync(query, cancellationToken);
 
         return new ChatResponse
         {
@@ -169,7 +169,7 @@ public class OrchestratorAgent : BaseAgent
 
     private async Task<ChatResponse> HandleInconsistencyQueryAsync(string query, CancellationToken cancellationToken)
     {
-        var inconsistencies = await _inconsistencyAgent.AnalyzeAsync(query, cancellationToken);
+        var inconsistencies = await _inconsistencyAgent.AnalyseAsync(query, cancellationToken);
 
         return new ChatResponse
         {
@@ -273,7 +273,7 @@ public class OrchestratorAgent : BaseAgent
         sb.AppendLine("# Full Document Analysis Report\n");
         sb.AppendLine($"Analysis completed in {result.Metrics.TotalDuration.TotalSeconds:F1} seconds\n");
         sb.AppendLine($"## Summary");
-        sb.AppendLine($"- Documents analyzed: {result.Metrics.TotalDocuments}");
+        sb.AppendLine($"- Documents analysed: {result.Metrics.TotalDocuments}");
         sb.AppendLine($"- Chunks processed: {result.Metrics.TotalChunks}");
         sb.AppendLine($"- Duplications found: {result.Duplications.Count}");
         sb.AppendLine($"- Conflicts found: {result.Conflicts.Count}");

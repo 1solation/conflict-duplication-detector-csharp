@@ -106,7 +106,7 @@ public class CheckCommand : Command
         Console.WriteLine($"Running {analysisType} analysis against knowledge base...");
         Console.WriteLine();
 
-        var result = await analysisService.AnalyzeFileAsync(fileChunks, document, analysisType);
+        var result = await analysisService.AnalyseFileAsync(fileChunks, document, analysisType);
 
         PrintResults(result, Path.GetFileName(filePath));
         PrintMetrics(result.Metrics, config.OpenAI.Model, config.OpenAI.EmbeddingModel);
@@ -306,7 +306,7 @@ public class CheckCommand : Command
         var totalTokens = metrics.AgentMetrics.Sum(a => a.TotalTokens);
 
         Console.WriteLine($"Total Duration: {metrics.TotalDuration.TotalSeconds:F2}s | Total Tokens: {totalTokens:N0}");
-        Console.WriteLine($"Chunks Analyzed: {metrics.TotalChunks}");
+        Console.WriteLine($"Chunks Analysed: {metrics.TotalChunks}");
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.DarkCyan;
         Console.WriteLine($"Models Used:");

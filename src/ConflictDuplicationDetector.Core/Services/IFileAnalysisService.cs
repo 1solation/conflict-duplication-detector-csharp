@@ -4,7 +4,7 @@ namespace ConflictDuplicationDetector.Core.Services;
 
 public interface IFileAnalysisService
 {
-    Task<AnalysisResult> AnalyzeFileAsync(
+    Task<AnalysisResult> AnalyseFileAsync(
         List<DocumentChunk> fileChunks,
         Document document,
         string analysisType = "all",

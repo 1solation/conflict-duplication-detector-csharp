@@ -6,9 +6,9 @@ using Microsoft.Extensions.AI;
 
 namespace ConflictDuplicationDetector.Cli.Commands;
 
-public class AnalyzeCommand : Command
+public class AnalyseCommand : Command
 {
-    public AnalyzeCommand(Option<string?> providerOption) : base("analyse", "Analyse documents for conflicts, duplications, and inconsistencies")
+    public AnalyseCommand(Option<string?> providerOption) : base("analyse", "Analyse documents for conflicts, duplications, and inconsistencies")
     {
         var typeOption = new Option<string?>("--type", "Analysis type: all, duplications, conflicts, inconsistencies");
         var topicOption = new Option<string?>("--topic", "Focus topic for analysis");
@@ -309,7 +309,7 @@ public class AnalyzeCommand : Command
         var totalTokens = metrics.AgentMetrics.Sum(a => a.TotalTokens);
 
         Console.WriteLine($"Total Duration: {metrics.TotalDuration.TotalSeconds:F2}s | Total Tokens: {totalTokens:N0}");
-        Console.WriteLine($"Chunks Analyzed: {metrics.TotalChunks}");
+        Console.WriteLine($"Chunks Analysed: {metrics.TotalChunks}");
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.DarkCyan;
         Console.WriteLine($"Models Used:");

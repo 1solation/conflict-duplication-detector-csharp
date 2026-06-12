@@ -1,6 +1,6 @@
 # Document Conflict & Duplication Detector
 
-A multi-agent system built with C#/.NET that analyzes document collections to detect conflicts, duplications, and inconsistencies using semantic search and AI-powered analysis.
+A multi-agent system built with C#/.NET that analyses document collections to detect conflicts, duplications, and inconsistencies using semantic search and AI-powered analysis.
 
 > ***NOTE:*** This is purely a proof of concept to explore and validate assumptions on an LLM's ability to detect conflict, duplication and inconsistencies within documentation.
 

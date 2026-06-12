@@ -8,50 +8,50 @@ namespace ConflictDuplicationDetector.Core.Agents;
 public class DuplicationAgent : BaseAgent
 {
     private readonly double _similarityThreshold;
-    
+
     public DuplicationAgent(
-        IChatClient chatClient, 
-        IVectorStore vectorStore, 
+        IChatClient chatClient,
+        IVectorStore vectorStore,
         MetricsTracker metricsTracker,
-        double similarityThreshold = 0.85) 
+        double similarityThreshold = 0.85)
         : base(chatClient, vectorStore, metricsTracker, "DuplicationAgent")
     {
         _similarityThreshold = similarityThreshold;
     }
-    
+
     private static readonly Lazy<string> _systemPrompt = new(() => LoadPromptFromFile("DuplicationAgent.txt"));
     protected override string SystemPrompt => _systemPrompt.Value;
-    
-    public async Task<List<DuplicationResult>> AnalyzeAsync(CancellationToken cancellationToken = default)
+
+    public async Task<List<DuplicationResult>> AnalyseAsync(CancellationToken cancellationToken = default)
     {
         var results = new List<DuplicationResult>();
         var processedPairs = new HashSet<string>();
-        
+
         var allChunks = await VectorStore.GetAllChunksAsync(cancellationToken);
-        
+
         foreach (var chunk in allChunks)
         {
             if (string.IsNullOrWhiteSpace(chunk.Content))
                 continue;
-                
+
             var similarChunks = await VectorStore.SearchAsync(chunk.Content, 20, cancellationToken);
-            
+
             foreach (var similar in similarChunks)
             {
                 if (similar.ChunkId == chunk.ChunkId)
                     continue;
-                    
+
                 if (similar.SimilarityScore < _similarityThreshold)
                     continue;
-                    
+
                 var pairKey = GetPairKey(chunk.ChunkId, similar.ChunkId);
                 if (processedPairs.Contains(pairKey))
                     continue;
-                    
+
                 processedPairs.Add(pairKey);
-                
+
                 var duplicationType = DetermineDuplicationType(chunk.ContentHash, similar.ContentHash, similar.SimilarityScore);
-                
+
                 results.Add(new DuplicationResult
                 {
                     Type = duplicationType,
@@ -78,19 +78,19 @@ public class DuplicationAgent : BaseAgent
                 });
             }
         }
-        
+
         return results;
     }
-    
-    public async Task<List<DuplicationResult>> AnalyzeWithLlmAsync(string? focusArea = null, CancellationToken cancellationToken = default)
+
+    public async Task<List<DuplicationResult>> AnalyseWithLlmAsync(string? focusArea = null, CancellationToken cancellationToken = default)
     {
         var query = focusArea ?? "Find all duplicate or similar content across all documents";
-        
+
         var (response, _) = await InvokeWithStructuredOutputAsync<DuplicationResponse>(query, cancellationToken: cancellationToken);
-        
+
         if (response?.Duplications == null)
             return new List<DuplicationResult>();
-            
+
         return response.Duplications.Select(d => new DuplicationResult
         {
             Type = ParseDuplicationType(d.Type),
@@ -102,14 +102,14 @@ public class DuplicationAgent : BaseAgent
             Explanation = d.Explanation
         }).ToList();
     }
-    
+
     private static string GetPairKey(string id1, string id2)
     {
-        return string.CompareOrdinal(id1, id2) < 0 
-            ? $"{id1}|{id2}" 
+        return string.CompareOrdinal(id1, id2) < 0
+            ? $"{id1}|{id2}"
             : $"{id2}|{id1}";
     }
-    
+
     private static DuplicationType DetermineDuplicationType(string hash1, string hash2, double similarity)
     {
         if (hash1 == hash2)
@@ -118,14 +118,14 @@ public class DuplicationAgent : BaseAgent
             return DuplicationType.NearDuplicate;
         return DuplicationType.Semantic;
     }
-    
+
     private static string TruncateText(string text, int maxLength)
     {
         if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
             return text;
         return text.Substring(0, maxLength - 3) + "...";
     }
-    
+
     private static DuplicationType ParseDuplicationType(string type)
     {
         return type?.ToLowerInvariant() switch
@@ -135,7 +135,7 @@ public class DuplicationAgent : BaseAgent
             _ => DuplicationType.Semantic
         };
     }
-    
+
     private static double ParseSimilarity(string similarity)
     {
         return similarity?.ToLowerInvariant() switch

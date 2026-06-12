@@ -9,7 +9,7 @@ providerOption.AddAlias("-p");
 var rootCommand = new RootCommand("Document Conflict & Duplication Detector - Multi-agent document analysis tool")
 {
     new IngestCommand(providerOption),
-    new AnalyzeCommand(providerOption),
+    new AnalyseCommand(providerOption),
     new CheckCommand(providerOption),
     new ChatCommand(providerOption)
 };

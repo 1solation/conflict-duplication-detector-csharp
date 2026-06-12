@@ -126,7 +126,7 @@ public class DetectorApplicationService
         var document = await parser.ParseAsync(filePath, cancellationToken);
         var fileChunks = _chunker.ChunkDocument(document, _analysisConfig.ChunkSize, _analysisConfig.ChunkOverlap).ToList();
 
-        return await _fileAnalysisService.AnalyzeFileAsync(fileChunks, document, type, cancellationToken);
+        return await _fileAnalysisService.AnalyseFileAsync(fileChunks, document, type, cancellationToken);
     }
 
     public async Task<Core.Agents.ChatResponse> ChatAsync(string message, CancellationToken cancellationToken)

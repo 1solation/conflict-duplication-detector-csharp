@@ -17,7 +17,7 @@ public class InconsistencyAgent : BaseAgent
     private static readonly Lazy<string> _systemPrompt = new(() => LoadPromptFromFile("InconsistencyAgent.txt"));
     protected override string SystemPrompt => _systemPrompt.Value;
 
-    public async Task<List<InconsistencyResult>> AnalyzeAsync(string? focusArea = null, CancellationToken cancellationToken = default)
+    public async Task<List<InconsistencyResult>> AnalyseAsync(string? focusArea = null, CancellationToken cancellationToken = default)
     {
         var query = focusArea ?? "Find all terminology, formatting, and structural inconsistencies across the documents";
 
@@ -39,7 +39,7 @@ public class InconsistencyAgent : BaseAgent
         }).ToList();
     }
 
-    public async Task<List<InconsistencyResult>> AnalyzeTerminologyAsync(CancellationToken cancellationToken = default)
+    public async Task<List<InconsistencyResult>> AnalyseTerminologyAsync(CancellationToken cancellationToken = default)
     {
         var query = @"Focus on finding terminology inconsistencies such as:
 - The same concept being referred to by different names
@@ -47,10 +47,10 @@ public class InconsistencyAgent : BaseAgent
 - Mixed use of abbreviations and full forms
 - Different spellings of the same term";
 
-        return await AnalyzeAsync(query, cancellationToken);
+        return await AnalyseAsync(query, cancellationToken);
     }
 
-    public async Task<List<InconsistencyResult>> AnalyzeFormattingAsync(CancellationToken cancellationToken = default)
+    public async Task<List<InconsistencyResult>> AnalyseFormattingAsync(CancellationToken cancellationToken = default)
     {
         var query = @"Focus on finding formatting inconsistencies such as:
 - Date format variations (MM/DD/YYYY vs DD/MM/YYYY vs YYYY-MM-DD)
@@ -59,10 +59,10 @@ public class InconsistencyAgent : BaseAgent
 - Currency format variations
 - Time format variations (12-hour vs 24-hour)";
 
-        return await AnalyzeAsync(query, cancellationToken);
+        return await AnalyseAsync(query, cancellationToken);
     }
 
-    public async Task<List<InconsistencyResult>> AnalyzeStructureAsync(CancellationToken cancellationToken = default)
+    public async Task<List<InconsistencyResult>> AnalyseStructureAsync(CancellationToken cancellationToken = default)
     {
         var query = @"Focus on finding structural inconsistencies such as:
 - Different heading styles or levels
@@ -70,7 +70,7 @@ public class InconsistencyAgent : BaseAgent
 - Varying list formats (numbered vs bulleted)
 - Different table structures for similar data";
 
-        return await AnalyzeAsync(query, cancellationToken);
+        return await AnalyseAsync(query, cancellationToken);
     }
 
     private static InconsistencyType ParseInconsistencyType(string type)
