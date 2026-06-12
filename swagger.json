@@ -671,6 +671,19 @@
                 "additionalProperties": false,
                 "description": "Knowledge base status."
             }
+        },
+        "securitySchemes": {
+            "ApiKey": {
+                "type": "apiKey",
+                "description": "API key passed in the X-Api-Key header.",
+                "name": "X-Api-Key",
+                "in": "header"
+            }
         }
-    }
+    },
+    "security": [
+        {
+            "ApiKey": []
+        }
+    ]
 }

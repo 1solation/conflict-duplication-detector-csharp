@@ -252,17 +252,26 @@ curl -s -X POST http://localhost:8080/api/analysis \
 
 ## Docker
 
-Build and run the API in Docker (requires `OPENAI_API_KEY` in the environment):
+Build and run the API in Docker. Copy the environment template and set your keys:
+
+```bash
+cp .env.example .env
+# Edit .env with your OPENAI_API_KEY, Auth__ApiKey, and Azure OpenAI settings if needed
+docker compose up --build
+```
+
+Or export variables in your shell:
 
 ```bash
 export OPENAI_API_KEY="your-api-key-here"
+export Auth__ApiKey="your-inbound-api-key"
 docker compose up --build
 ```
 
 - API: [http://localhost:8080/swagger](http://localhost:8080/swagger)
 - Knowledge base and uploads persist in the `detector-data` volume at `/data`
 
-Override paths via environment variables:
+Override paths and AI settings via environment variables (see [`.env.example`](.env.example)):
 
 
 | Variable                   | Default (container)  |
@@ -270,7 +279,11 @@ Override paths via environment variables:
 | `VectorStore__PersistPath` | `/data/vectors.json` |
 | `Storage__UploadsPath`     | `/data/uploads`      |
 | `OPENAI_API_KEY`           | (required)           |
-| `Auth__ApiKey`             | (required)           |
+| `Auth__ApiKey`             | (recommended)        |
+| `OpenAI__Provider`         | `OpenAI`             |
+| `OpenAI__AzureEndpoint`    | (empty)              |
+| `OpenAI__Model`            | `gpt-4o`             |
+| `OpenAI__EmbeddingModel`   | `text-embedding-3-small` |
 
 
 ## Deployment
@@ -362,7 +375,7 @@ Create `src/ConflictDuplicationDetector.Api/appsettings.local.json`:
   },
   "OpenAI": {
     "Provider": "AzureOpenAI",
-    "AzureEndpoint": "https://your-url/openai",
+    "AzureEndpoint": "https://your-url",
     "ApiKeyHeader": "Api-Key"
   }
 }
@@ -452,7 +465,7 @@ dotnet run --project src/ConflictDuplicationDetector.Cli -- analyse
 
 ```bash
 export OPENAI_API_KEY="your-azure-api-key"
-export OpenAI__AzureEndpoint="https://your-url/openai"
+export OpenAI__AzureEndpoint="https://your-url"
 export OpenAI__ApiKeyHeader="Api-Key"
 
 dotnet run --project src/ConflictDuplicationDetector.Cli -- --provider AzureOpenAI analyse
@@ -471,7 +484,7 @@ Create `src/ConflictDuplicationDetector.Api/appsettings.local.json`:
 {
   "OpenAI": {
     "Provider": "AzureOpenAI",
-    "AzureEndpoint": "https://your-url/openai",
+    "AzureEndpoint": "https://your-url",
     "ApiKeyHeader": "Api-Key"
   }
 }
@@ -487,7 +500,7 @@ dotnet run --project src/ConflictDuplicationDetector.Api
 ```bash
 export OPENAI_API_KEY="your-azure-api-key"
 export OpenAI__Provider="AzureOpenAI"
-export OpenAI__AzureEndpoint="https://your-url/openai"
+export OpenAI__AzureEndpoint="https://your-url"
 export OpenAI__ApiKeyHeader="Api-Key"
 
 dotnet run --project src/ConflictDuplicationDetector.Api
@@ -500,9 +513,21 @@ Set environment variables in `docker-compose.yml` or Azure Container Apps:
 ```bash
 OPENAI_API_KEY=your-azure-api-key
 OpenAI__Provider=AzureOpenAI
-OpenAI__AzureEndpoint=https://your-url/openai
+OpenAI__AzureEndpoint=https://your-url
 OpenAI__ApiKeyHeader=Api-Key
 ```
+
+##### Run in background
+`docker compose up --build -d`
+
+##### View logs
+`docker compose logs -f`
+
+##### Stop
+`docker compose down`
+
+##### Stop and remove the data volume (wipes knowledge base)
+`docker compose down -v`
 
 
 ## Project Structure

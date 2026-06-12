@@ -262,7 +262,7 @@ For the Department for Education OpenAI sandbox:
 
 ```bash
 OpenAI__Provider=AzureOpenAI
-OpenAI__AzureEndpoint=https://api.education.gov.uk/sandbox/openai
+OpenAI__AzureEndpoint=your-url
 OpenAI__ApiKeyHeader=Api-Key
 OpenAI__Model=gpt-4o
 OpenAI__EmbeddingModel=text-embedding-3-small

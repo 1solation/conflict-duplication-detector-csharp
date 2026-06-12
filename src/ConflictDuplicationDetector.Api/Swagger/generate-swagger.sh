@@ -8,7 +8,7 @@ API_PROJECT="$REPO_ROOT/src/ConflictDuplicationDetector.Api"
 PORT=5080
 BASE_URL="http://localhost:$PORT"
 SWAGGER_JSON_URL="$BASE_URL/swagger/v1/swagger.json"
-MAX_WAIT=60  # seconds to wait for the API to start
+MAX_WAIT=90  # seconds to wait for the API to start
 
 # ── Start the API in the background ───────────────────────────
 echo "Starting API on port $PORT..."

@@ -7,9 +7,16 @@ services:
       - "8080:8080"
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      Auth__ApiKey: ${Auth__ApiKey:-}
       ASPNETCORE_ENVIRONMENT: Production
       VectorStore__PersistPath: /data/vectors.json
       Storage__UploadsPath: /data/uploads
+      OpenAI__Provider: ${OpenAI__Provider:-OpenAI}
+      OpenAI__Model: ${OpenAI__Model:-gpt-4o}
+      OpenAI__EmbeddingModel: ${OpenAI__EmbeddingModel:-text-embedding-3-small}
+      OpenAI__AzureEndpoint: ${OpenAI__AzureEndpoint:-}
+      OpenAI__AzureApiVersion: ${OpenAI__AzureApiVersion:-2024-02-01}
+      OpenAI__ApiKeyHeader: ${OpenAI__ApiKeyHeader:-}
     volumes:
       - detector-data:/data
     restart: unless-stopped
