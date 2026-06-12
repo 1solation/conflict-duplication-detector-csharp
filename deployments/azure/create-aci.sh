@@ -63,6 +63,7 @@ LOCATION="${AZURE_LOCATION:-uksouth}"
 CONTAINER_NAME="${ACI_CONTAINER_NAME:-aci-document-analysis}"
 IMAGE_NAME="${ACI_IMAGE_NAME:-document-analysis}"
 IMAGE_TAG="${ACI_IMAGE_TAG:-latest}"
+IMAGE_PLATFORM="${ACI_IMAGE_PLATFORM:-linux/amd64}"
 CPU="${ACI_CPU:-2}"
 MEMORY="${ACI_MEMORY_GB:-4}"
 FILE_SHARE="${ACI_FILE_SHARE:-data}"
@@ -130,6 +131,7 @@ AZURE_LOCATION=$LOCATION
 ACI_CONTAINER_NAME=$CONTAINER_NAME
 ACI_IMAGE_NAME=$IMAGE_NAME
 ACI_IMAGE_TAG=$IMAGE_TAG
+ACI_IMAGE_PLATFORM=$IMAGE_PLATFORM
 ACI_SUFFIX=$SUFFIX
 ACI_ACR=$ACR
 ACI_STORAGE=$STORAGE
@@ -161,7 +163,7 @@ ensure_acr
 echo "==> Building and pushing container image..."
 az acr login --name "$ACR"
 FULL_IMAGE="$ACR.azurecr.io/$IMAGE_NAME:$IMAGE_TAG"
-docker build -t "$FULL_IMAGE" "$REPO_ROOT"
+docker build --platform "$IMAGE_PLATFORM" -t "$FULL_IMAGE" "$REPO_ROOT"
 docker push "$FULL_IMAGE"
 
 ACR_PASSWORD="$(az acr credential show --name "$ACR" --query 'passwords[0].value' -o tsv)"
@@ -262,6 +264,7 @@ echo ""
 echo "  Resource group : $RG"
 echo "  Container      : $CONTAINER_NAME"
 echo "  Image          : $FULL_IMAGE"
+echo "  Image platform : $IMAGE_PLATFORM"
 echo "  FQDN           : $FQDN"
 echo ""
 echo "  Health : http://${FQDN}:8080/api/health"

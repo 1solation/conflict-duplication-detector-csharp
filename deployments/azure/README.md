@@ -80,10 +80,13 @@ The create script prints the public URL when done. ACI serves **HTTP** on port *
 | `AZURE_RESOURCE_GROUP` | `rg-conflict-detector` |
 | `AZURE_LOCATION` | `uksouth` |
 | `ACI_ACR` | Reuse existing ACR in the resource group, or create `crdocumentanalysis<suffix>` |
+| `ACI_IMAGE_PLATFORM` | `linux/amd64` |
 | `ACI_CPU` | `2` |
 | `ACI_MEMORY_GB` | `4` |
 
 The create script skips ACR creation when a registry with that name already exists (any resource group in your subscription). Set `ACI_ACR` to pin a specific registry name across runs.
+
+ACI expects an `amd64` Linux image. On Apple Silicon Macs, Docker may otherwise build `linux/arm64`, which can pull successfully in ACI but crash immediately with connection resets on the health endpoint. The script defaults to `linux/amd64` to avoid that.
 
 Deploy state is written to `deployments/azure/.aci-deploy.env` (gitignored) so `destroy-aci.sh` knows which resource group to delete.
 
