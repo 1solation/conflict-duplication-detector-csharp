@@ -64,7 +64,7 @@ The create script prints the public URL when done. ACI serves **HTTP** on port *
 | Script | Purpose |
 |--------|---------|
 | [`create-aci.sh`](create-aci.sh) | Build image, push to ACR, provision storage, run ACI |
-| [`destroy-aci.sh`](destroy-aci.sh) | Delete the resource group and local deploy state |
+| [`destroy-aci.sh`](destroy-aci.sh) | Delete the ACI container, ACR, and local deploy state; leave the resource group intact |
 
 **Create script options:**
 
@@ -88,7 +88,7 @@ The create script skips ACR creation when a registry with that name already exis
 
 ACI expects an `amd64` Linux image. On Apple Silicon Macs, Docker may otherwise build `linux/arm64`, which can pull successfully in ACI but crash immediately with connection resets on the health endpoint. The script defaults to `linux/amd64` to avoid that.
 
-Deploy state is written to `deployments/azure/.aci-deploy.env` (gitignored) so `destroy-aci.sh` knows which resource group to delete.
+Deploy state is written to `deployments/azure/.aci-deploy.env` (gitignored) so `destroy-aci.sh` knows which container and registry to delete.
 
 ### Next step: Azure Container Apps
 
@@ -266,6 +266,8 @@ ACI is ideal for a POC or demo today: one container, public DNS, Azure Files mou
 ./deployments/azure/create-aci.sh
 ./deployments/azure/destroy-aci.sh --yes
 ```
+
+`destroy-aci.sh` deletes the ACI container and Azure Container Registry named in deploy state, but it does not delete the resource group.
 
 ### Manual deploy
 

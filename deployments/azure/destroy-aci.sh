@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Tear down an ACI deployment created by create-aci.sh.
+# Tear down ACI resources created by create-aci.sh, while leaving the resource group intact.
 #
 # Usage:
 #   ./deployments/azure/destroy-aci.sh --yes
@@ -26,7 +26,7 @@ for arg in "$@"; do
 done
 
 if [[ "$CONFIRM" != true ]]; then
-  echo "This will delete the Azure resource group and all resources inside it." >&2
+  echo "This will delete the ACI container and Azure Container Registry, but leave the resource group intact." >&2
   echo "Re-run with --yes to confirm." >&2
   exit 1
 fi
@@ -37,10 +37,18 @@ if [[ -f "$STATE_FILE" ]]; then
 fi
 
 RG="${AZURE_RESOURCE_GROUP:-}"
+CONTAINER_NAME="${ACI_CONTAINER_NAME:-aci-document-analysis}"
+ACR="${ACI_ACR:-}"
 
 if [[ -z "$RG" ]]; then
   echo "Error: AZURE_RESOURCE_GROUP is not set and $STATE_FILE was not found." >&2
   echo "Set AZURE_RESOURCE_GROUP or run create-aci.sh first." >&2
+  exit 1
+fi
+
+if [[ -z "$ACR" ]]; then
+  echo "Error: ACI_ACR is not set and $STATE_FILE was not found." >&2
+  echo "Set ACI_ACR or run create-aci.sh first." >&2
   exit 1
 fi
 
@@ -52,17 +60,29 @@ fi
 az account show >/dev/null
 
 if ! az group show --name "$RG" >/dev/null 2>&1; then
-  echo "Resource group '$RG' does not exist (already deleted?)."
+  echo "Resource group '$RG' does not exist."
   rm -f "$STATE_FILE"
   exit 0
 fi
 
-echo "==> Deleting resource group '$RG' (this may take several minutes)..."
-az group delete --name "$RG" --yes --no-wait
+if az container show --resource-group "$RG" --name "$CONTAINER_NAME" >/dev/null 2>&1; then
+  echo "==> Deleting container instance '$CONTAINER_NAME'..."
+  az container delete --resource-group "$RG" --name "$CONTAINER_NAME" --yes --output none
+else
+  echo "Container instance '$CONTAINER_NAME' was not found in resource group '$RG'."
+fi
+
+if az acr show --name "$ACR" >/dev/null 2>&1; then
+  ACR_RG="$(az acr show --name "$ACR" --query resourceGroup -o tsv)"
+  echo "==> Deleting Azure Container Registry '$ACR' from resource group '$ACR_RG'..."
+  az acr delete --resource-group "$ACR_RG" --name "$ACR" --yes --output none
+else
+  echo "Azure Container Registry '$ACR' was not found."
+fi
 
 rm -f "$STATE_FILE"
 
 echo ""
-echo "Delete initiated for resource group '$RG'."
-echo "Check progress: az group show --name $RG"
+echo "Deleted ACI container and registry resources where present."
+echo "Resource group left intact: $RG"
 echo "Removed local state: $STATE_FILE"
