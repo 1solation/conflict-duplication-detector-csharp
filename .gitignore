@@ -38,6 +38,7 @@ ScaffoldingReadMe.txt
 
 # dotenv environment variables file
 .env
+deployments/azure/.aci-deploy.env
 
 # Local configuration overrides (environment-specific settings)
 **/appsettings.local.json

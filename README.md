@@ -292,6 +292,19 @@ Override paths and AI settings via environment variables (see [`.env.example`](.
 
 The API can be deployed as a container to Azure Container Apps or Azure Container Instances. See the full deployment guide: **[deployments/azure/README.md](deployments/azure/README.md)**
 
+#### Quick Start (ACI — fastest today)
+
+Scripts read secrets from your repo-root `.env` file:
+
+```bash
+az login
+./deployments/azure/create-aci.sh
+# tear down when done:
+./deployments/azure/destroy-aci.sh --yes
+```
+
+For HTTPS ingress and scaling, move to Azure Container Apps next (see the full guide — include a `/data` volume mount when you do).
+
 #### Quick Start (Azure Container Apps)
 
 ```bash
@@ -552,7 +565,7 @@ ConflictDuplicationDetector/
 │       ├── DfE AI Document Analysis POC.postman_collection.json
 │       └── Program.cs        # API + Swagger
 ├── deployments/
-│   └── azure/                # Azure Container Apps/ACI deployment guide
+│   └── azure/                # ACI create/destroy scripts + Container Apps guide
 ├── Dockerfile
 ├── docker-compose.yml
 └── tests/

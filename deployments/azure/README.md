@@ -43,6 +43,71 @@ The application can be configured entirely through environment variables, making
 
 ---
 
+## Quick start: ACI scripts (fastest path today)
+
+For a one-shot container deployment today, use the scripts in this directory. They read secrets and OpenAI settings from the repo-root [`.env`](../../.env) file (copy from [`.env.example`](../../.env.example)).
+
+```bash
+# 1. Log in and configure secrets locally
+az login
+cp .env.example .env   # if needed — set OPENAI_API_KEY, Auth__ApiKey, Azure OpenAI vars
+
+# 2. Deploy (creates RG, ACR, storage, and ACI)
+./deployments/azure/create-aci.sh
+
+# 3. Tear down when finished
+./deployments/azure/destroy-aci.sh --yes
+```
+
+The create script prints the public URL when done. ACI serves **HTTP** on port **8080** (not HTTPS).
+
+| Script | Purpose |
+|--------|---------|
+| [`create-aci.sh`](create-aci.sh) | Build image, push to ACR, provision storage, run ACI |
+| [`destroy-aci.sh`](destroy-aci.sh) | Delete the resource group and local deploy state |
+
+**Create script options:**
+
+```bash
+./deployments/azure/create-aci.sh --skip-storage   # skip Azure Files; data lost on restart
+./deployments/azure/create-aci.sh --redeploy       # rebuild image and recreate container (after first deploy)
+```
+
+**Optional overrides** (export before running):
+
+| Variable | Default |
+|----------|---------|
+| `AZURE_RESOURCE_GROUP` | `rg-conflict-detector` |
+| `AZURE_LOCATION` | `uksouth` |
+| `ACI_CPU` | `2` |
+| `ACI_MEMORY_GB` | `4` |
+
+Deploy state is written to `deployments/azure/.aci-deploy.env` (gitignored) so `destroy-aci.sh` knows which resource group to delete.
+
+### Next step: Azure Container Apps
+
+ACI is the quickest way to get running today. For a longer-lived deployment, **Azure Container Apps** is the logical next step — it adds HTTPS ingress, scaling, and managed revisions. See [Option 1](#option-1-azure-container-apps-recommended) below.
+
+When moving to Container Apps, mount the Azure Files share at `/data` so uploads and the vector store persist (the create script below registers storage on the environment but does not attach it to the app — add the volume mount explicitly):
+
+```bash
+# After create-aci.sh-style storage is registered on the Container Apps environment (Option 1, Step 3)
+az containerapp create \
+  ... \
+  --volume-mounts "data=/data"
+```
+
+Or on an existing app:
+
+```bash
+az containerapp update \
+  --name ca-conflict-detector \
+  --resource-group rg-conflict-detector \
+  --volume-mounts "data=/data"
+```
+
+---
+
 ## Option 1: Azure Container Apps (Recommended)
 
 Azure Container Apps provides a fully managed serverless container platform with built-in scaling, HTTPS ingress, and persistent storage.
@@ -185,12 +250,22 @@ Then reference secrets in environment variables using `secretref:<key>`, e.g. `s
 
 ## Option 2: Azure Container Instances (Simpler, No Scaling)
 
-For simpler deployments without auto-scaling:
+Use the [Quick start scripts](#quick-start-aci-scripts-fastest-path-today) above for a guided deploy. The manual steps below are equivalent.
 
-### Step 1: Create Container Instance
+ACI is ideal for a POC or demo today: one container, public DNS, Azure Files mounted at `/data`. It does not auto-scale and serves HTTP only. To update env vars or the image, recreate the container (`create-aci.sh --redeploy`) or delete and redeploy.
+
+### Automated deploy
 
 ```bash
-# Create ACI with environment variables
+./deployments/azure/create-aci.sh
+./deployments/azure/destroy-aci.sh --yes
+```
+
+### Manual deploy
+
+Build and push the image first (see [Option 1, Step 1](#step-1-build-and-push-container-image)), create Azure Files storage (see [Option 1, Step 3](#step-3-create-azure-files-storage-for-persistence) — skip the Container Apps environment storage command), then:
+
+```bash
 az container create \
   --resource-group rg-conflict-detector \
   --name aci-conflict-detector \
@@ -203,16 +278,33 @@ az container create \
   --cpu 2 \
   --memory 4 \
   --environment-variables \
+    OpenAI__Provider=AzureOpenAI \
+    OpenAI__AzureEndpoint=https://your-endpoint \
+    OpenAI__AzureApiVersion=2024-10-21 \
+    OpenAI__ApiKeyHeader=api-key \
     OpenAI__Model=gpt-4o \
     OpenAI__EmbeddingModel=text-embedding-3-small \
     VectorStore__PersistPath=/data/vectors.json \
     Storage__UploadsPath=/data/uploads \
   --secure-environment-variables \
     OPENAI_API_KEY=YOUR_OPENAI_API_KEY_HERE \
+    Auth__ApiKey=YOUR_INBOUND_API_KEY_HERE \
   --azure-file-volume-account-name stconflictdetector \
   --azure-file-volume-account-key $STORAGE_KEY \
   --azure-file-volume-share-name data \
   --azure-file-volume-mount-path /data
+```
+
+### Verify ACI deployment
+
+```bash
+FQDN=$(az container show \
+  --resource-group rg-conflict-detector \
+  --name aci-conflict-detector \
+  --query ipAddress.fqdn -o tsv)
+
+curl "http://${FQDN}:8080/api/health"
+# Swagger: http://${FQDN}:8080/swagger
 ```
 
 ### Configure via Azure Portal
@@ -223,7 +315,7 @@ az container create \
 4. Click **Settings** → **Environment variables**
 5. View existing variables or recreate with updated values
 
-> **Note**: ACI requires recreating the container to update environment variables. Use the CLI or redeploy.
+> **Note**: ACI requires recreating the container to update environment variables. Use `create-aci.sh --redeploy` or the CLI.
 
 ---
 
@@ -273,20 +365,29 @@ OPENAI_API_KEY=your-dfe-api-key
 
 ## Verify Deployment
 
-Once deployed, access the API:
+### Container Apps
 
 ```bash
-# Get the FQDN
-az containerapp show \
+FQDN=$(az containerapp show \
   --name ca-conflict-detector \
   --resource-group rg-conflict-detector \
-  --query properties.configuration.ingress.fqdn -o tsv
+  --query properties.configuration.ingress.fqdn -o tsv)
 
-# Test health endpoint
-curl https://ca-conflict-detector.<region>.azurecontainerapps.io/api/health
+curl "https://${FQDN}/api/health"
+# Swagger: https://${FQDN}/swagger
 ```
 
-Open Swagger UI at: `https://ca-conflict-detector.<region>.azurecontainerapps.io/swagger`
+### Container Instances
+
+```bash
+FQDN=$(az container show \
+  --resource-group rg-conflict-detector \
+  --name aci-conflict-detector \
+  --query ipAddress.fqdn -o tsv)
+
+curl "http://${FQDN}:8080/api/health"
+# Swagger: http://${FQDN}:8080/swagger
+```
 
 ---
 
