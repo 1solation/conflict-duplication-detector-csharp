@@ -85,9 +85,42 @@ if [[ -f "$STATE_FILE" ]]; then
 fi
 
 SUFFIX="${ACI_SUFFIX:-$(openssl rand -hex 3)}"
-ACR="${ACI_ACR:-crdocumentanalysis${SUFFIX}}"
 STORAGE="${ACI_STORAGE:-stdocumentanalysis${SUFFIX}}"
 DNS_LABEL="${ACI_DNS_LABEL:-document-analysis-${SUFFIX}}"
+
+resolve_acr_name() {
+  if [[ -n "${ACI_ACR:-}" ]]; then
+    echo "$ACI_ACR"
+    return
+  fi
+
+  if az group show --name "$RG" >/dev/null 2>&1; then
+    local existing_acr
+    existing_acr="$(az acr list --resource-group "$RG" --query "[0].name" -o tsv 2>/dev/null || true)"
+    if [[ -n "$existing_acr" ]]; then
+      echo "$existing_acr"
+      return
+    fi
+  fi
+
+  echo "crdocumentanalysis${SUFFIX}"
+}
+
+ensure_acr() {
+  if az acr show --name "$ACR" >/dev/null 2>&1; then
+    echo "==> Using existing Azure Container Registry '$ACR'..."
+    local admin_enabled
+    admin_enabled="$(az acr show --name "$ACR" --query adminUserEnabled -o tsv)"
+    if [[ "$admin_enabled" != "true" ]]; then
+      echo "==> Enabling ACR admin user on '$ACR' (required for ACI image pull)..."
+      az acr update --name "$ACR" --admin-enabled true --output none
+    fi
+    return
+  fi
+
+  echo "==> Creating Azure Container Registry '$ACR'..."
+  az acr create --resource-group "$RG" --name "$ACR" --sku Basic --admin-enabled true --output none
+}
 
 save_state() {
   cat >"$STATE_FILE" <<EOF
@@ -122,12 +155,8 @@ fi
 echo "==> Creating resource group '$RG' in $LOCATION..."
 az group create --name "$RG" --location "$LOCATION" --output none
 
-if az acr show --name "$ACR" --resource-group "$RG" >/dev/null 2>&1; then
-  echo "==> Using existing Azure Container Registry '$ACR'..."
-else
-  echo "==> Creating Azure Container Registry '$ACR'..."
-  az acr create --resource-group "$RG" --name "$ACR" --sku Basic --admin-enabled true --output none
-fi
+ACR="$(resolve_acr_name)"
+ensure_acr
 
 echo "==> Building and pushing container image..."
 az acr login --name "$ACR"

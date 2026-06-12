@@ -26,4 +26,8 @@ COPY --from=build /app/publish .
 EXPOSE 8080
 VOLUME ["/data"]
 
+ENV DOTNET_SYSTEM_CONSOLE_ALLOW_ANSI_COLOR_REDIRECTION=1
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+ENV COMPlus_EnableDiagnostics=0
+
 ENTRYPOINT ["dotnet", "ConflictDuplicationDetector.Api.dll"]
