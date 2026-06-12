@@ -297,17 +297,26 @@ For Azure OpenAI, also set `OpenAI__AzureEndpoint` and `OpenAI__AzureApiVersion`
 
 Configuration can be set via `appsettings.json`, local overrides, or environment variables.
 
-### Local override pattern (recommended for development)
+### Local Override Pattern (Recommended)
 
 Use committed defaults plus a gitignored local file for machine-specific settings. **Never put API keys in config files** — use `env:OPENAI_API_KEY` and set the real key in your shell or `.env`.
 
 | File | Committed? | Purpose |
 | ---- | ---------- | ------- |
 | `appsettings.json` | Yes | Shared safe defaults |
-| `appsettings.example.json` | Yes | Template for local overrides (CLI) |
+| `appsettings.example.json` | Yes | Template for local overrides |
 | `appsettings.local.json` | **No** | Your local/environment-specific overrides |
 
-**Setup for a new developer:**
+Settings load in order (later values win): `appsettings.json` → `appsettings.local.json` → environment variables.
+
+> **Important:** The CLI and API have **separate** config files. Each project has its own `appsettings.json` and can have its own `appsettings.local.json`.
+
+| Project | Config location |
+| ------- | --------------- |
+| CLI | `src/ConflictDuplicationDetector.Cli/appsettings.local.json` |
+| API | `src/ConflictDuplicationDetector.Api/appsettings.local.json` |
+
+#### Setup for CLI
 
 ```bash
 cp src/ConflictDuplicationDetector.Cli/appsettings.example.json \
@@ -315,19 +324,28 @@ cp src/ConflictDuplicationDetector.Cli/appsettings.example.json \
 export OPENAI_API_KEY="your-api-key"
 ```
 
-**Example `appsettings.local.json` (Azure OpenAI):**
+#### Setup for API
+
+Create `src/ConflictDuplicationDetector.Api/appsettings.local.json`:
 
 ```json
 {
   "OpenAI": {
     "Provider": "AzureOpenAI",
-    "AzureEndpoint": "https://api.education.gov.uk/sandbox/openai",
+    "AzureEndpoint": "https://your-url/openai",
     "ApiKeyHeader": "Api-Key"
   }
 }
 ```
 
-Settings load in order (later values win): `appsettings.json` → `appsettings.local.json` → environment variables. The API also loads `appsettings.local.json` when present.
+Then run:
+
+```bash
+export OPENAI_API_KEY="your-api-key"
+dotnet run --project src/ConflictDuplicationDetector.Api
+```
+
+> **Note:** The API does not have a `--provider` flag like the CLI. Configuration is via `appsettings.local.json` or environment variables only.
 
 ### Base `appsettings.json`
 
@@ -381,9 +399,11 @@ Environment variables use double underscores (`__`) for nested configuration (e.
 
 ### Using Azure OpenAI
 
-To use Azure OpenAI instead of direct OpenAI:
+Azure is selected when either `OpenAI:Provider` is `AzureOpenAI` **or** `OpenAI:AzureEndpoint` is set.
 
-**Via local override (recommended locally):**
+#### CLI with Azure OpenAI
+
+**Option 1 — Local override (recommended):**
 
 ```bash
 cp src/ConflictDuplicationDetector.Cli/appsettings.example.json \
@@ -392,22 +412,60 @@ export OPENAI_API_KEY="your-azure-api-key"
 dotnet run --project src/ConflictDuplicationDetector.Cli -- analyse
 ```
 
-**Via CLI `--provider` flag (with env vars):**
+**Option 2 — `--provider` flag:**
+
 ```bash
 export OPENAI_API_KEY="your-azure-api-key"
-export OpenAI__AzureEndpoint="https://api.education.gov.uk/sandbox/openai"
+export OpenAI__AzureEndpoint="https://your-url/openai"
 export OpenAI__ApiKeyHeader="Api-Key"
 
 dotnet run --project src/ConflictDuplicationDetector.Cli -- --provider AzureOpenAI analyse
 dotnet run --project src/ConflictDuplicationDetector.Cli -- -p AzureOpenAI ingest ./documents
 ```
 
-**Via environment variables (Docker/Azure):**
+#### API with Azure OpenAI
+
+The API has **no `--provider` flag** — use config files or environment variables.
+
+**Option 1 — Local override (recommended):**
+
+Create `src/ConflictDuplicationDetector.Api/appsettings.local.json`:
+
+```json
+{
+  "OpenAI": {
+    "Provider": "AzureOpenAI",
+    "AzureEndpoint": "https://your-url/openai",
+    "ApiKeyHeader": "Api-Key"
+  }
+}
+```
+
+```bash
+export OPENAI_API_KEY="your-azure-api-key"
+dotnet run --project src/ConflictDuplicationDetector.Api
+```
+
+**Option 2 — Environment variables:**
+
 ```bash
 export OPENAI_API_KEY="your-azure-api-key"
 export OpenAI__Provider="AzureOpenAI"
-export OpenAI__AzureEndpoint="https://api.education.gov.uk/sandbox/openai"
+export OpenAI__AzureEndpoint="https://your-url/openai"
 export OpenAI__ApiKeyHeader="Api-Key"
+
+dotnet run --project src/ConflictDuplicationDetector.Api
+```
+
+#### Docker / Azure Deployment
+
+Set environment variables in `docker-compose.yml` or Azure Container Apps:
+
+```bash
+OPENAI_API_KEY=your-azure-api-key
+OpenAI__Provider=AzureOpenAI
+OpenAI__AzureEndpoint=https://your-url/openai
+OpenAI__ApiKeyHeader=Api-Key
 ```
 
 

@@ -48,12 +48,7 @@ public class AIClientFactory : IAIClientFactory
         var endpoint = new Uri(config.AzureEndpoint!);
         var credential = new ApiKeyCredential(config.ApiKey);
 
-        var options = new AzureOpenAIClientOptions();
-        
-        if (!string.IsNullOrEmpty(config.ApiKeyHeader))
-        {
-            options.AddPolicy(new CustomApiKeyHeaderPolicy(config.ApiKeyHeader, config.ApiKey), PipelinePosition.PerCall);
-        }
+        var options = CreateAzureClientOptions(config);
 
         var client = new AzureOpenAIClient(endpoint, credential, options);
         return client.GetChatClient(config.Model).AsIChatClient();
@@ -64,15 +59,36 @@ public class AIClientFactory : IAIClientFactory
         var endpoint = new Uri(config.AzureEndpoint!);
         var credential = new ApiKeyCredential(config.ApiKey);
 
-        var options = new AzureOpenAIClientOptions();
-        
+        var options = CreateAzureClientOptions(config);
+
+        var client = new AzureOpenAIClient(endpoint, credential, options);
+        return client.GetEmbeddingClient(config.EmbeddingModel);
+    }
+
+    private static AzureOpenAIClientOptions CreateAzureClientOptions(OpenAIConfiguration config)
+    {
+        var serviceVersion = GetServiceVersion(config.AzureApiVersion);
+        var options = new AzureOpenAIClientOptions(serviceVersion);
+
+        // DEBUG logging to debug URL construction
+        // options.AddPolicy(new RequestLoggingPolicy(), PipelinePosition.PerCall);
+
         if (!string.IsNullOrEmpty(config.ApiKeyHeader))
         {
             options.AddPolicy(new CustomApiKeyHeaderPolicy(config.ApiKeyHeader, config.ApiKey), PipelinePosition.PerCall);
         }
 
-        var client = new AzureOpenAIClient(endpoint, credential, options);
-        return client.GetEmbeddingClient(config.EmbeddingModel);
+        return options;
+    }
+
+    private static AzureOpenAIClientOptions.ServiceVersion GetServiceVersion(string? apiVersion)
+    {
+        return apiVersion switch
+        {
+            "2024-10-21" => AzureOpenAIClientOptions.ServiceVersion.V2024_10_21,
+            "2024-06-01" => AzureOpenAIClientOptions.ServiceVersion.V2024_06_01,
+            _ => AzureOpenAIClientOptions.ServiceVersion.V2024_10_21
+        };
     }
 
     private static void ValidateConfig(OpenAIConfiguration config)
@@ -111,6 +127,21 @@ internal class CustomApiKeyHeaderPolicy : PipelinePolicy
     public override async ValueTask ProcessAsync(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
     {
         message.Request.Headers.Set(_headerName, _apiKey);
+        await ProcessNextAsync(message, pipeline, currentIndex);
+    }
+}
+
+internal class RequestLoggingPolicy : PipelinePolicy
+{
+    public override void Process(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
+    {
+        Console.WriteLine($"[DEBUG] Request URL: {message.Request.Uri}");
+        ProcessNext(message, pipeline, currentIndex);
+    }
+
+    public override async ValueTask ProcessAsync(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
+    {
+        Console.WriteLine($"[DEBUG] Request URL: {message.Request.Uri}");
         await ProcessNextAsync(message, pipeline, currentIndex);
     }
 }
