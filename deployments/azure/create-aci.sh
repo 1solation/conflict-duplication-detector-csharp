@@ -207,6 +207,7 @@ az container create \
   --resource-group "$RG" \
   --name "$CONTAINER_NAME" \
   --image "$FULL_IMAGE" \
+  --os-type Linux \
   --registry-login-server "$ACR.azurecr.io" \
   --registry-username "$ACR" \
   --registry-password "$ACR_PASSWORD" \
@@ -216,7 +217,7 @@ az container create \
   --memory "$MEMORY" \
   --environment-variables "${ENV_VARS[@]}" \
   --secure-environment-variables "${SECURE_ENV_VARS[@]}" \
-  "${VOLUME_ARGS[@]}" \
+  ${VOLUME_ARGS[@]+"${VOLUME_ARGS[@]}"} \
   --output none
 
 save_state
