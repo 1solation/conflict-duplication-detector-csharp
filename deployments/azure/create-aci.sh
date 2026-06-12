@@ -85,8 +85,8 @@ if [[ -f "$STATE_FILE" ]]; then
 fi
 
 SUFFIX="${ACI_SUFFIX:-$(openssl rand -hex 3)}"
-ACR="${ACI_ACR:-crdocument-analysis${SUFFIX}}"
-STORAGE="${ACI_STORAGE:-stdocument-analysis${SUFFIX}}"
+ACR="${ACI_ACR:-crdocumentanalysis${SUFFIX}}"
+STORAGE="${ACI_STORAGE:-stdocumentanalysis${SUFFIX}}"
 DNS_LABEL="${ACI_DNS_LABEL:-document-analysis-${SUFFIX}}"
 
 save_state() {
