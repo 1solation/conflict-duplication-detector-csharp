@@ -187,6 +187,18 @@ curl -H "X-Api-Key: your-api-key" http://localhost:5080/api/knowledge-base
 
 The Swagger UI has an **Authorize** button (top-right) where you can paste the key once and have it sent automatically on every request.
 
+### Postman collection
+
+A ready-made Postman collection is included at [`src/ConflictDuplicationDetector.Api/DfE AI Document Analysis POC.postman_collection.json`](src/ConflictDuplicationDetector.Api/DfE%20AI%20Document%20Analysis%20POC.postman_collection.json).
+
+Import it in Postman via **Import** → **Upload Files**, then:
+
+1. Start the API locally (`dotnet run --project src/ConflictDuplicationDetector.Api`).
+2. Add an `X-Api-Key` header to requests that require authentication (or set it at the collection level), matching the value in `appsettings.local.json`.
+3. For **ingest docs**, attach files under the `files` form field (multipart/form-data).
+
+The collection includes requests for health, knowledge base, document ingest, job polling, analysis, and chat against `http://localhost:5080`.
+
 ### Regenerate Swagger artifacts
 
 To update the repo-root `swagger.json` and `swagger.html` after making API changes:
@@ -512,6 +524,7 @@ ConflictDuplicationDetector/
 │   └── ConflictDuplicationDetector.Api/
 │       ├── Endpoints/        # REST API
 │       ├── Services/         # Job queue, application layer
+│       ├── DfE AI Document Analysis POC.postman_collection.json
 │       └── Program.cs        # API + Swagger
 ├── deployments/
 │   └── azure/                # Azure Container Apps/ACI deployment guide

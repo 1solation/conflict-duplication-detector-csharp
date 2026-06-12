@@ -1,0 +1,256 @@
+{
+  "info": {
+    "_postman_id": "7cdacbbc-38c9-4d0b-bde0-787e907cc450",
+    "name": "DfE AI Document Analysis POC",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "7113394"
+  },
+  "item": [
+    {
+      "name": "Local",
+      "item": [
+        {
+          "name": "health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5080/api/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5080",
+              "path": [
+                "api",
+                "health"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "knowledge-base",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5080/api/knowledge-base",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5080",
+              "path": [
+                "api",
+                "knowledge-base"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "ingest docs",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "type": "file",
+                  "uuid": "80c11299-efb6-466b-8dd6-fdc80110f833",
+                  "src": [
+                    "/Users/hasibahmed/workspace/conflict-duplication-detector-csharp/mock_documents/Mock_guidance_doc_penalty_notices.docx",
+                    "/Users/hasibahmed/workspace/conflict-duplication-detector-csharp/mock_documents/Mock_Implementing_the_Digital_Literacy_and_AI_Ethics_Framework_(DLAIE).docx",
+                    "/Users/hasibahmed/workspace/conflict-duplication-detector-csharp/mock_documents/Mock_The _School_Resource_Efficiency_Grant_(SREG)_2026_to_2027.docx"
+                  ]
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:5080/api/documents",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5080",
+              "path": [
+                "api",
+                "documents"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "check jobID",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "uuid": "e42cac01-dfb5-4fec-9127-b9cbd614ae7c",
+                  "src": "/Users/hasibahmed/workspace/conflict-duplication-detector-csharp/mock_documents/Mock_The _School_Resource_Efficiency_Grant_(SREG)_2026_to_2027.docx"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:5080/api/jobs/545a2447-1d02-4cf8-a865-8fd1c0e90cbd",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5080",
+              "path": [
+                "api",
+                "jobs",
+                "545a2447-1d02-4cf8-a865-8fd1c0e90cbd"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check recent jobs",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "uuid": "e42cac01-dfb5-4fec-9127-b9cbd614ae7c",
+                  "src": "/Users/hasibahmed/workspace/conflict-duplication-detector-csharp/mock_documents/Mock_The _School_Resource_Efficiency_Grant_(SREG)_2026_to_2027.docx"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:5080/api/jobs",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5080",
+              "path": [
+                "api",
+                "jobs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Analysis",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"type\": \"all\",\n    \"topic\": \"null\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5080/api/analysis",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5080",
+              "path": [
+                "api",
+                "analysis"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Chat",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"message\": \"find conflicts regarding the fine policy for school attendance\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5080/api/chat",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5080",
+              "path": [
+                "api",
+                "chat"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "apikey",
+        "apikey": [
+          {
+            "key": "value",
+            "value": "test-api-key-76390265",
+            "type": "string"
+          },
+          {
+            "key": "key",
+            "value": "x-api-key",
+            "type": "string"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
