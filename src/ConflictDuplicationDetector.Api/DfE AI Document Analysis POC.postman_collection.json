@@ -35,12 +35,10 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:5080/api/knowledge-base",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/knowledge-base",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5080",
               "path": [
                 "api",
                 "knowledge-base"
@@ -60,22 +58,20 @@
                 {
                   "key": "files",
                   "type": "file",
-                  "uuid": "80c11299-efb6-466b-8dd6-fdc80110f833",
+                  "uuid": "4cf9e97f-7790-46f1-a731-e8d3693eefca",
                   "src": [
-                    "/Users/hasibahmed/workspace/conflict-duplication-detector-csharp/mock_documents/Mock_guidance_doc_penalty_notices.docx",
+                    "/Users/hasibahmed/workspace/conflict-duplication-detector-csharp/mock_documents/Mock_The _School_Resource_Efficiency_Grant_(SREG)_2026_to_2027.docx",
                     "/Users/hasibahmed/workspace/conflict-duplication-detector-csharp/mock_documents/Mock_Implementing_the_Digital_Literacy_and_AI_Ethics_Framework_(DLAIE).docx",
-                    "/Users/hasibahmed/workspace/conflict-duplication-detector-csharp/mock_documents/Mock_The _School_Resource_Efficiency_Grant_(SREG)_2026_to_2027.docx"
+                    "/Users/hasibahmed/workspace/conflict-duplication-detector-csharp/mock_documents/Mock_guidance_doc_penalty_notices.docx"
                   ]
                 }
               ]
             },
             "url": {
-              "raw": "http://localhost:5080/api/documents",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/documents",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5080",
               "path": [
                 "api",
                 "documents"
@@ -104,12 +100,10 @@
               ]
             },
             "url": {
-              "raw": "http://localhost:5080/api/jobs/545a2447-1d02-4cf8-a865-8fd1c0e90cbd",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/jobs/545a2447-1d02-4cf8-a865-8fd1c0e90cbd",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5080",
               "path": [
                 "api",
                 "jobs",
@@ -139,12 +133,10 @@
               ]
             },
             "url": {
-              "raw": "http://localhost:5080/api/jobs",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/jobs",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5080",
               "path": [
                 "api",
                 "jobs"
@@ -168,15 +160,40 @@
               }
             },
             "url": {
-              "raw": "http://localhost:5080/api/analysis",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/analysis",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5080",
               "path": [
                 "api",
                 "analysis"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check file against KB",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"type\": \"all\",\n    \"topic\": \"null\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/check",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "check"
               ]
             }
           },
@@ -197,12 +214,10 @@
               }
             },
             "url": {
-              "raw": "http://localhost:5080/api/chat",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/chat",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5080",
               "path": [
                 "api",
                 "chat"
@@ -251,6 +266,36 @@
           }
         }
       ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": ""
     }
   ]
 }
