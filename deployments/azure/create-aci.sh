@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Deploy the Conflict & Duplication Detector API to Azure Container Instances (ACI).
+# Deploy the Conflict & Duplication Detector Document Analysis API to Azure Container Instances (ACI).
 #
 # Prerequisites: az CLI, Docker, az login, and a populated repo-root .env file.
 #
@@ -58,10 +58,10 @@ if [[ -z "${OPENAI_API_KEY:-}" ]]; then
 fi
 
 # Deploy defaults (override via environment before running)
-RG="${AZURE_RESOURCE_GROUP:-rg-conflict-detector}"
+RG="${AZURE_RESOURCE_GROUP:-rg-document-analysis}"
 LOCATION="${AZURE_LOCATION:-uksouth}"
-CONTAINER_NAME="${ACI_CONTAINER_NAME:-aci-conflict-detector}"
-IMAGE_NAME="${ACI_IMAGE_NAME:-conflict-detector}"
+CONTAINER_NAME="${ACI_CONTAINER_NAME:-aci-document-analysis}"
+IMAGE_NAME="${ACI_IMAGE_NAME:-document-analysis}"
 IMAGE_TAG="${ACI_IMAGE_TAG:-latest}"
 CPU="${ACI_CPU:-2}"
 MEMORY="${ACI_MEMORY_GB:-4}"
@@ -85,9 +85,9 @@ if [[ -f "$STATE_FILE" ]]; then
 fi
 
 SUFFIX="${ACI_SUFFIX:-$(openssl rand -hex 3)}"
-ACR="${ACI_ACR:-crconflict${SUFFIX}}"
-STORAGE="${ACI_STORAGE:-stconflict${SUFFIX}}"
-DNS_LABEL="${ACI_DNS_LABEL:-conflict-detector-${SUFFIX}}"
+ACR="${ACI_ACR:-crdocument-analysis${SUFFIX}}"
+STORAGE="${ACI_STORAGE:-stdocument-analysis${SUFFIX}}"
+DNS_LABEL="${ACI_DNS_LABEL:-document-analysis-${SUFFIX}}"
 
 save_state() {
   cat >"$STATE_FILE" <<EOF
