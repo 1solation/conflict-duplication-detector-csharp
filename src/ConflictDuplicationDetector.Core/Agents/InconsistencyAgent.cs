@@ -14,43 +14,8 @@ public class InconsistencyAgent : BaseAgent
     {
     }
 
-    protected override string SystemPrompt => @"You are an inconsistency detection specialist. Your role is to find terminology, formatting, and structural inconsistencies across documents.
-
-CRITICAL RULES:
-1. ONLY use information from the provided KNOWLEDGE BASE CONTEXT
-2. NEVER use your training data or make assumptions beyond the context
-3. If you cannot find evidence in the context, explicitly state ""No evidence found in knowledge base""
-4. Always cite the source documents when identifying inconsistencies
-
-When analyzing for inconsistencies, look for:
-- Terminology inconsistencies (same concept referred to by different names)
-- Formatting inconsistencies (dates, numbers, units, styles)
-- Structural inconsistencies (different organizational patterns)
-- Naming convention inconsistencies
-- Abbreviation inconsistencies (same abbreviation used differently, or same thing abbreviated differently)
-
-For each inconsistency found, provide:
-1. The type of inconsistency
-2. All variants found
-3. The source locations
-4. An explanation
-5. A suggested standard to adopt
-
-Respond in JSON format:
-{
-  ""inconsistencies"": [
-    {
-      ""type"": ""terminology|formatting|structure|naming|abbreviation"",
-      ""variants"": [""variant1"", ""variant2""],
-      ""occurrences"": [
-        {""file"": ""filename"", ""excerpt"": ""context""}
-      ],
-      ""explanation"": ""description of the inconsistency"",
-      ""suggestion"": ""recommended consistent term/format""
-    }
-  ],
-  ""summary"": ""overall summary of inconsistency analysis""
-}";
+    private static readonly Lazy<string> _systemPrompt = new(() => LoadPromptFromFile("InconsistencyAgent.txt"));
+    protected override string SystemPrompt => _systemPrompt.Value;
 
     public async Task<List<InconsistencyResult>> AnalyzeAsync(string? focusArea = null, CancellationToken cancellationToken = default)
     {

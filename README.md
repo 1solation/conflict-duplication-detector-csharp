@@ -477,6 +477,7 @@ ConflictDuplicationDetector/
 ├── src/
 │   ├── ConflictDuplicationDetector.Core/
 │   │   ├── Agents/           # AI agents (Orchestrator, Duplication, Conflict, Inconsistency)
+│   │   │   └── Prompts/      # Agent system prompts (versioned separately)
 │   │   ├── Documents/        # Document parsers (PDF, DOCX, HTML)
 │   │   ├── Models/           # Data models and configuration
 │   │   ├── Services/         # Business logic (e.g. FileAnalysisService for check)
@@ -546,6 +547,26 @@ Agents are constrained to only use information from the vector store through:
 2. RAG pattern: retrieve relevant chunks before each query
 3. Context injection: all queries include retrieved document chunks
 4. Agents are instructed to say "No evidence found" when context is insufficient
+
+## Agent Prompts
+
+Agent system prompts are stored as separate text files in `src/ConflictDuplicationDetector.Core/Agents/Prompts/` rather than being hardcoded in the agent classes. This design provides several benefits:
+
+- **Separate Versioning**: Prompts can be versioned, reviewed, and updated independently from code changes
+- **Easier Maintenance**: Non-developers can review and suggest prompt improvements without navigating code
+- **Performance**: Each agent uses a `Lazy<string>` field to load its prompt file once on first access and cache it for subsequent calls
+- **Flexibility**: Prompts can be modified without recompiling the application (though a rebuild is required to copy updated prompts to the output directory)
+
+### Available Prompts
+
+| Prompt File | Agent | Purpose |
+|-------------|-------|---------|
+| `OrchestratorAgent.txt` | Orchestrator Agent | Coordinates workflow and routes queries to specialized agents |
+| `ConflictAgent.txt` | Conflict Agent | Detects contradictions and policy conflicts |
+| `DuplicationAgent.txt` | Duplication Agent | Identifies exact and semantic duplicates |
+| `InconsistencyAgent.txt` | Inconsistency Agent | Finds terminology and formatting inconsistencies |
+
+Each prompt file defines the agent's role, analysis guidelines, output format, and critical rules for staying grounded in the knowledge base context.
 
 ## Development
 

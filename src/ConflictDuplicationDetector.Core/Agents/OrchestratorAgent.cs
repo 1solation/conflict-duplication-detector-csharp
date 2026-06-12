@@ -22,25 +22,8 @@ public class OrchestratorAgent : BaseAgent
         _inconsistencyAgent = new InconsistencyAgent(chatClient, vectorStore, metricsTracker);
     }
 
-    protected override string SystemPrompt => @"You are an orchestrator agent that coordinates document analysis. Your role is to:
-1. Understand user queries about document analysis
-2. Route requests to appropriate specialized agents
-3. Synthesize results from multiple agents
-4. Provide helpful responses based on the knowledge base
-
-CRITICAL RULES:
-1. ONLY use information from the provided KNOWLEDGE BASE CONTEXT
-2. NEVER use your training data or make assumptions beyond the context
-3. If you cannot find evidence in the context, explicitly state ""No evidence found in knowledge base""
-4. Always cite sources from the knowledge base
-
-When users ask about:
-- Duplicates/copies/similar content → Use duplication analysis
-- Conflicts/contradictions/inconsistencies in meaning → Use conflict analysis
-- Terminology/formatting/style inconsistencies → Use inconsistency analysis
-- General questions → Search the knowledge base and provide a direct answer
-
-Always provide clear, structured responses that cite the source documents.";
+    private static readonly Lazy<string> _systemPrompt = new(() => LoadPromptFromFile("OrchestratorAgent.txt"));
+    protected override string SystemPrompt => _systemPrompt.Value;
 
     public async Task<AnalysisResult> RunFullAnalysisAsync(CancellationToken cancellationToken = default)
     {

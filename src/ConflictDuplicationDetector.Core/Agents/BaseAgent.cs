@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 using ConflictDuplicationDetector.Core.Models;
 using ConflictDuplicationDetector.Core.VectorStore;
@@ -22,6 +23,52 @@ public abstract class BaseAgent
     }
     
     protected abstract string SystemPrompt { get; }
+    
+    protected static string LoadPromptFromFile(string fileName)
+    {
+        var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+        var assemblyDirectory = Path.GetDirectoryName(assemblyLocation) ?? string.Empty;
+        var promptPath = Path.Combine(assemblyDirectory, "Agents", "Prompts", fileName);
+        
+        if (File.Exists(promptPath))
+        {
+            return File.ReadAllText(promptPath);
+        }
+        
+        var currentDirectory = Directory.GetCurrentDirectory();
+        promptPath = Path.Combine(currentDirectory, "Agents", "Prompts", fileName);
+        
+        if (File.Exists(promptPath))
+        {
+            return File.ReadAllText(promptPath);
+        }
+        
+        var projectRoot = FindProjectRoot(currentDirectory);
+        if (!string.IsNullOrEmpty(projectRoot))
+        {
+            promptPath = Path.Combine(projectRoot, "src", "ConflictDuplicationDetector.Core", "Agents", "Prompts", fileName);
+            if (File.Exists(promptPath))
+            {
+                return File.ReadAllText(promptPath);
+            }
+        }
+        
+        throw new FileNotFoundException($"Prompt file not found: {fileName}");
+    }
+    
+    private static string? FindProjectRoot(string startPath)
+    {
+        var currentDir = startPath;
+        while (!string.IsNullOrEmpty(currentDir))
+        {
+            if (Directory.GetFiles(currentDir, "*.sln").Length > 0)
+            {
+                return currentDir;
+            }
+            currentDir = Directory.GetParent(currentDir)?.FullName;
+        }
+        return null;
+    }
     
     protected async Task<string> GetContextAsync(string query, int topK = 10, CancellationToken cancellationToken = default)
     {

@@ -19,41 +19,8 @@ public class DuplicationAgent : BaseAgent
         _similarityThreshold = similarityThreshold;
     }
     
-    protected override string SystemPrompt => @"You are a duplication detection specialist. Your role is to identify exact and semantic duplicates in document collections.
-
-CRITICAL RULES:
-1. ONLY use information from the provided KNOWLEDGE BASE CONTEXT
-2. NEVER use your training data or make assumptions beyond the context
-3. If you cannot find evidence in the context, explicitly state ""No evidence found in knowledge base""
-4. Always cite the source documents when identifying duplicates
-
-When analyzing for duplications, look for:
-- Exact text matches (copy-paste duplications)
-- Semantic duplicates (same meaning, different wording)
-- Near-duplicates (minor variations like formatting or typos)
-
-For each potential duplicate found, provide:
-1. The type of duplication (exact, semantic, or near-duplicate)
-2. A similarity assessment (high/medium/low)
-3. The source locations
-4. An excerpt from each source
-5. A brief explanation
-
-Respond in JSON format:
-{
-  ""duplications"": [
-    {
-      ""type"": ""exact|semantic|near-duplicate"",
-      ""similarity"": ""high|medium|low"",
-      ""sourceFile"": ""filename"",
-      ""targetFile"": ""filename"",
-      ""sourceExcerpt"": ""text excerpt"",
-      ""targetExcerpt"": ""text excerpt"",
-      ""explanation"": ""why these are duplicates""
-    }
-  ],
-  ""summary"": ""overall summary of duplication analysis""
-}";
+    private static readonly Lazy<string> _systemPrompt = new(() => LoadPromptFromFile("DuplicationAgent.txt"));
+    protected override string SystemPrompt => _systemPrompt.Value;
     
     public async Task<List<DuplicationResult>> AnalyzeAsync(CancellationToken cancellationToken = default)
     {
