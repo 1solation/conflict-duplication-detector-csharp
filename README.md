@@ -177,6 +177,16 @@ dotnet run --project src/ConflictDuplicationDetector.Api
 
 Open Swagger UI at [http://localhost:5080/swagger](http://localhost:5080/swagger).
 
+### Authentication
+
+All API endpoints except `GET /api/health` require an `X-Api-Key` header. Set the key in `appsettings.local.json` (see [Setup for API](#setup-for-api)) or via the `Auth__ApiKey` environment variable.
+
+```bash
+curl -H "X-Api-Key: your-api-key" http://localhost:5080/api/knowledge-base
+```
+
+The Swagger UI has an **Authorize** button (top-right) where you can paste the key once and have it sent automatically on every request.
+
 ### Regenerate Swagger artifacts
 
 To update the repo-root `swagger.json` and `swagger.html` after making API changes:
@@ -209,17 +219,21 @@ The script starts the API, fetches the OpenAPI spec, generates a self-contained 
 ```bash
 # 1. Ingest a document (returns job ID)
 curl -s -X POST http://localhost:8080/api/documents \
-  -F "file=@./mock_documents/Mock_guidance_doc_penalty_notices.docx"
+  -H "X-Api-Key: your-api-key" \
+  -F "files=@./mock_documents/Mock_guidance_doc_penalty_notices.docx"
 
 # 2. Poll until completed
-curl -s http://localhost:8080/api/jobs/{jobId}
+curl -s http://localhost:8080/api/jobs/{jobId} \
+  -H "X-Api-Key: your-api-key"
 
 # 3. Check a new file against the knowledge base
 curl -s -X POST "http://localhost:8080/api/check?type=all" \
+  -H "X-Api-Key: your-api-key" \
   -F "file=@./mock_documents/Mock_conflicting_guidance_doc_penalty_notices.docx"
 
 # 4. Run full knowledge-base analysis
 curl -s -X POST http://localhost:8080/api/analysis \
+  -H "X-Api-Key: your-api-key" \
   -H "Content-Type: application/json" \
   -d '{"type":"all"}'
 ```
@@ -244,6 +258,7 @@ Override paths via environment variables:
 | `VectorStore__PersistPath` | `/data/vectors.json` |
 | `Storage__UploadsPath`     | `/data/uploads`      |
 | `OPENAI_API_KEY`           | (required)           |
+| `Auth__ApiKey`             | (required)           |
 
 
 ## Deployment
@@ -330,6 +345,9 @@ Create `src/ConflictDuplicationDetector.Api/appsettings.local.json`:
 
 ```json
 {
+  "Auth": {
+    "ApiKey": "your-inbound-api-key"
+  },
   "OpenAI": {
     "Provider": "AzureOpenAI",
     "AzureEndpoint": "https://your-url/openai",
@@ -346,11 +364,16 @@ dotnet run --project src/ConflictDuplicationDetector.Api
 ```
 
 > **Note:** The API does not have a `--provider` flag like the CLI. Configuration is via `appsettings.local.json` or environment variables only.
+>
+> **Note:** If `Auth:ApiKey` is empty or not set, authentication is skipped. Always set a key in any non-local environment.
 
 ### Base `appsettings.json`
 
 ```json
 {
+  "Auth": {
+    "ApiKey": ""
+  },
   "OpenAI": {
     "ApiKey": "env:OPENAI_API_KEY",
     "Provider": "OpenAI",
@@ -382,6 +405,7 @@ Environment variables use double underscores (`__`) for nested configuration (e.
 | Variable | Description | Default |
 | -------- | ----------- | ------- |
 | `OPENAI_API_KEY` | OpenAI/Azure OpenAI API key (required) | - |
+| `Auth__ApiKey` | Inbound API key for the HTTP API (`X-Api-Key` header) | - |
 | `OpenAI__Provider` | AI provider: `OpenAI` or `AzureOpenAI` | `OpenAI` |
 | `OpenAI__Model` | Chat model for analysis | `gpt-4o` |
 | `OpenAI__EmbeddingModel` | Embedding model | `text-embedding-3-small` |

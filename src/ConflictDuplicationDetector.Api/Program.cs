@@ -1,4 +1,5 @@
 using ConflictDuplicationDetector.Api.Endpoints;
+using ConflictDuplicationDetector.Api.Middleware;
 using ConflictDuplicationDetector.Api.Services;
 using ConflictDuplicationDetector.Api.Swagger;
 using ConflictDuplicationDetector.Core.DependencyInjection;
@@ -48,6 +49,25 @@ builder.Services.AddSwaggerGen(options =>
     });
 
     options.OperationFilter<SwaggerExamplesFilter>();
+
+    var apiKeyScheme = new OpenApiSecurityScheme
+    {
+        Name = "X-Api-Key",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Description = "API key passed in the X-Api-Key header."
+    };
+    options.AddSecurityDefinition("ApiKey", apiKeyScheme);
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "ApiKey" }
+            },
+            []
+        }
+    });
 });
 
 builder.Services.Configure<FormOptions>(options =>
@@ -63,6 +83,8 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "Conflict Duplication Detector API v1");
     options.RoutePrefix = "swagger";
 });
+
+app.UseMiddleware<ApiKeyMiddleware>();
 
 app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 app.MapDetectorApi();

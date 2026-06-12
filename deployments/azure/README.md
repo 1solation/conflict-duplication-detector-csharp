@@ -18,6 +18,7 @@ The application can be configured entirely through environment variables, making
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `OPENAI_API_KEY` | Your OpenAI or Azure OpenAI API key | `sk-...` or Azure key |
+| `Auth__ApiKey` | Inbound API key clients must send in the `X-Api-Key` header | any strong secret string |
 
 ### Optional Environment Variables
 
@@ -138,9 +139,10 @@ az containerapp create \
   --memory 2Gi \
   --env-vars \
     "OPENAI_API_KEY=secretref:openai-key" \
+    "Auth__ApiKey=secretref:api-key" \
     "VectorStore__PersistPath=/data/vectors.json" \
     "Storage__UploadsPath=/data/uploads" \
-  --secrets "openai-key=YOUR_OPENAI_API_KEY_HERE"
+  --secrets "openai-key=YOUR_OPENAI_API_KEY_HERE" "api-key=YOUR_INBOUND_API_KEY_HERE"
 ```
 
 ### Step 5: Configure Environment Variables via Azure Portal
@@ -155,6 +157,7 @@ az containerapp create \
    | Name | Source | Value |
    |------|--------|-------|
    | `OPENAI_API_KEY` | Reference a secret | `openai-key` |
+   | `Auth__ApiKey` | Reference a secret | `api-key` |
    | `OpenAI__Model` | Manual entry | `gpt-4o` |
    | `OpenAI__EmbeddingModel` | Manual entry | `text-embedding-3-small` |
    | `VectorStore__PersistPath` | Manual entry | `/data/vectors.json` |
@@ -167,14 +170,16 @@ az containerapp create \
 
 1. Go to **Container Apps** → **ca-conflict-detector**
 2. Click **Secrets** in the left menu
-3. Click **+ Add**
-4. Enter:
-   - **Key**: `openai-key`
-   - **Type**: Container Apps Secret
-   - **Value**: Your OpenAI API key
-5. Click **Add**
+3. Click **+ Add** and create both secrets:
 
-Then reference the secret in environment variables using `secretref:openai-key`.
+   | Key | Value |
+   |-----|-------|
+   | `openai-key` | Your OpenAI / Azure OpenAI API key |
+   | `api-key` | The inbound API key clients will send in `X-Api-Key` |
+
+4. Click **Add**
+
+Then reference secrets in environment variables using `secretref:<key>`, e.g. `secretref:api-key`.
 
 ---
 
