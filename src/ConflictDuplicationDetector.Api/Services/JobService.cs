@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Threading.Channels;
 using ConflictDuplicationDetector.Api.Models;
+using ConflictDuplicationDetector.Core.Models;
 
 namespace ConflictDuplicationDetector.Api.Services;
 
@@ -9,10 +10,12 @@ public class JobService : IJobService
     private readonly ConcurrentDictionary<Guid, JobEntry> _jobs = new();
     private readonly Channel<Guid> _queue = Channel.CreateUnbounded<Guid>();
     private readonly ILogger<JobService> _logger;
+    private readonly string _provider;
 
-    public JobService(ILogger<JobService> logger)
+    public JobService(ILogger<JobService> logger, AppConfiguration config)
     {
         _logger = logger;
+        _provider = ProviderFormatter.Format(config.OpenAI);
     }
 
     public async Task<JobAcceptedResponse> EnqueueAsync(
@@ -34,6 +37,7 @@ public class JobService : IJobService
         await _queue.Writer.WriteAsync(jobId, cancellationToken);
 
         return new JobAcceptedResponse(
+            _provider,
             jobId,
             type,
             JobStatus.Pending,
@@ -83,8 +87,9 @@ public class JobService : IJobService
         }
     }
 
-    private static JobStatusResponse ToResponse(JobEntry entry) =>
+    private JobStatusResponse ToResponse(JobEntry entry) =>
         new(
+            _provider,
             entry.Id,
             entry.Type,
             entry.Status,

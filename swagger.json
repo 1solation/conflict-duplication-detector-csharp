@@ -23,6 +23,7 @@
                                     "$ref": "#/components/schemas/HealthResponse"
                                 },
                                 "example": {
+                                    "provider": "Azure OpenAI",
                                     "status": "healthy",
                                     "openAiConfigured": true,
                                     "knowledgeBaseExists": true,
@@ -51,6 +52,7 @@
                                     "$ref": "#/components/schemas/KnowledgeBaseStatusResponse"
                                 },
                                 "example": {
+                                    "provider": "Azure OpenAI",
                                     "exists": true,
                                     "chunkCount": 142,
                                     "persistPath": "./data/vectors.json"
@@ -102,6 +104,7 @@
                                     "$ref": "#/components/schemas/JobAcceptedResponse"
                                 },
                                 "example": {
+                                    "provider": "Azure OpenAI",
                                     "jobId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                                     "type": "Ingest",
                                     "status": "Pending",
@@ -144,6 +147,7 @@
                                     "$ref": "#/components/schemas/JobAcceptedResponse"
                                 },
                                 "example": {
+                                    "provider": "Azure OpenAI",
                                     "jobId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                                     "type": "Analysis",
                                     "status": "Pending",
@@ -202,6 +206,7 @@
                                     "$ref": "#/components/schemas/JobAcceptedResponse"
                                 },
                                 "example": {
+                                    "provider": "Azure OpenAI",
                                     "jobId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                                     "type": "Check",
                                     "status": "Pending",
@@ -243,6 +248,7 @@
                                     "$ref": "#/components/schemas/JobAcceptedResponse"
                                 },
                                 "example": {
+                                    "provider": "Azure OpenAI",
                                     "jobId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                                     "type": "Chat",
                                     "status": "Pending",
@@ -285,6 +291,7 @@
                                 },
                                 "example": [
                                     {
+                                        "provider": "Azure OpenAI",
                                         "jobId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                                         "type": "Analysis",
                                         "status": "Completed",
@@ -295,6 +302,7 @@
                                         "result": null
                                     },
                                     {
+                                        "provider": "Azure OpenAI",
                                         "jobId": "7ca85f64-5717-4562-b3fc-2c963f66afa7",
                                         "type": "Ingest",
                                         "status": "Running",
@@ -339,6 +347,7 @@
                                     "$ref": "#/components/schemas/JobStatusResponse"
                                 },
                                 "example": {
+                                    "provider": "Azure OpenAI",
                                     "jobId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                                     "type": "Analysis",
                                     "status": "Completed",
@@ -517,6 +526,10 @@
             "HealthResponse": {
                 "type": "object",
                 "properties": {
+                    "provider": {
+                        "type": "string",
+                        "nullable": true
+                    },
                     "status": {
                         "type": "string",
                         "nullable": true
@@ -575,6 +588,10 @@
             "JobAcceptedResponse": {
                 "type": "object",
                 "properties": {
+                    "provider": {
+                        "type": "string",
+                        "nullable": true
+                    },
                     "jobId": {
                         "type": "string",
                         "format": "uuid"
@@ -607,6 +624,10 @@
             "JobStatusResponse": {
                 "type": "object",
                 "properties": {
+                    "provider": {
+                        "type": "string",
+                        "nullable": true
+                    },
                     "jobId": {
                         "type": "string",
                         "format": "uuid"
@@ -656,6 +677,10 @@
             "KnowledgeBaseStatusResponse": {
                 "type": "object",
                 "properties": {
+                    "provider": {
+                        "type": "string",
+                        "nullable": true
+                    },
                     "exists": {
                         "type": "boolean"
                     },

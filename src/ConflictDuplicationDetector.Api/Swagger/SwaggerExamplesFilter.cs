@@ -140,6 +140,7 @@ public class SwaggerExamplesFilter : IOperationFilter
 
     private static OpenApiObject HealthResponseExample => new()
     {
+        ["provider"] = new OpenApiString("Azure OpenAI"),
         ["status"] = new OpenApiString("healthy"),
         ["openAiConfigured"] = new OpenApiBoolean(true),
         ["knowledgeBaseExists"] = new OpenApiBoolean(true),
@@ -148,6 +149,7 @@ public class SwaggerExamplesFilter : IOperationFilter
 
     private static OpenApiObject KnowledgeBaseResponseExample => new()
     {
+        ["provider"] = new OpenApiString("Azure OpenAI"),
         ["exists"] = new OpenApiBoolean(true),
         ["chunkCount"] = new OpenApiInteger(142),
         ["persistPath"] = new OpenApiString("./data/vectors.json")
@@ -155,6 +157,7 @@ public class SwaggerExamplesFilter : IOperationFilter
 
     private static OpenApiObject IngestAcceptedExample => new()
     {
+        ["provider"] = new OpenApiString("Azure OpenAI"),
         ["jobId"] = new OpenApiString("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
         ["type"] = new OpenApiString("Ingest"),
         ["status"] = new OpenApiString("Pending"),
@@ -169,6 +172,7 @@ public class SwaggerExamplesFilter : IOperationFilter
 
     private static OpenApiObject AnalysisAcceptedExample => new()
     {
+        ["provider"] = new OpenApiString("Azure OpenAI"),
         ["jobId"] = new OpenApiString("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
         ["type"] = new OpenApiString("Analysis"),
         ["status"] = new OpenApiString("Pending"),
@@ -177,6 +181,7 @@ public class SwaggerExamplesFilter : IOperationFilter
 
     private static OpenApiObject CheckAcceptedExample => new()
     {
+        ["provider"] = new OpenApiString("Azure OpenAI"),
         ["jobId"] = new OpenApiString("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
         ["type"] = new OpenApiString("Check"),
         ["status"] = new OpenApiString("Pending"),
@@ -190,6 +195,7 @@ public class SwaggerExamplesFilter : IOperationFilter
 
     private static OpenApiObject ChatAcceptedExample => new()
     {
+        ["provider"] = new OpenApiString("Azure OpenAI"),
         ["jobId"] = new OpenApiString("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
         ["type"] = new OpenApiString("Chat"),
         ["status"] = new OpenApiString("Pending"),
@@ -200,6 +206,7 @@ public class SwaggerExamplesFilter : IOperationFilter
     {
         new OpenApiObject
         {
+            ["provider"] = new OpenApiString("Azure OpenAI"),
             ["jobId"] = new OpenApiString("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
             ["type"] = new OpenApiString("Analysis"),
             ["status"] = new OpenApiString("Completed"),
@@ -211,6 +218,7 @@ public class SwaggerExamplesFilter : IOperationFilter
         },
         new OpenApiObject
         {
+            ["provider"] = new OpenApiString("Azure OpenAI"),
             ["jobId"] = new OpenApiString("7ca85f64-5717-4562-b3fc-2c963f66afa7"),
             ["type"] = new OpenApiString("Ingest"),
             ["status"] = new OpenApiString("Running"),
@@ -224,6 +232,7 @@ public class SwaggerExamplesFilter : IOperationFilter
 
     private static OpenApiObject GetJobCompletedExample => new()
     {
+        ["provider"] = new OpenApiString("Azure OpenAI"),
         ["jobId"] = new OpenApiString("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
         ["type"] = new OpenApiString("Analysis"),
         ["status"] = new OpenApiString("Completed"),

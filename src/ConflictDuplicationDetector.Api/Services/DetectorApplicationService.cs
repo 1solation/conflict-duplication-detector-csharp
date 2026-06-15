@@ -139,6 +139,10 @@ public class DetectorApplicationService
     {
         var exists = await _coordinator.KnowledgeBaseExistsAsync(cancellationToken);
         var count = exists ? await _coordinator.GetChunkCountAsync(cancellationToken) : 0;
-        return new KnowledgeBaseStatusResponse(exists, count, _config.VectorStore.PersistPath);
+        return new KnowledgeBaseStatusResponse(
+            ProviderFormatter.Format(_config.OpenAI),
+            exists,
+            count,
+            _config.VectorStore.PersistPath);
     }
 }

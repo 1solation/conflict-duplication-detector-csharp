@@ -92,6 +92,7 @@ public static class ApiEndpoints
         var kb = await detector.GetKnowledgeBaseStatusAsync(cancellationToken);
 
         return Results.Ok(new HealthResponse(
+            ProviderFormatter.Format(config.OpenAI),
             "healthy",
             !string.IsNullOrEmpty(config.OpenAI.ApiKey),
             kb.Exists,
