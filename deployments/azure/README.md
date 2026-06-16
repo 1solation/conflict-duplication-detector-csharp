@@ -1,6 +1,6 @@
 # Deploying to Azure
 
-This guide covers deploying the Conflict & Duplication Detector API as a container to Azure using **Azure Container Apps** or **Azure Container Instances**.
+This guide covers deploying the Conflict & Duplication Detector API as a container to Azure using **Azure Container Apps** or **Azure Container Instances**. It also outlines a future serverless option using **Azure Functions** and **Azure AI Search**.
 
 ## Prerequisites
 
@@ -92,7 +92,7 @@ Deploy state is written to `deployments/azure/.aci-deploy.env` (gitignored) so `
 
 ### Next step: Azure Container Apps
 
-ACI is the quickest way to get running today. For a longer-lived deployment, **Azure Container Apps** is the logical next step — it adds HTTPS ingress, scaling, and managed revisions. See [Option 1](#option-1-azure-container-apps-recommended) below.
+ACI is the quickest way to get running today. For a longer-lived deployment, **Azure Container Apps** is the logical next step — it adds HTTPS ingress, scaling, and managed revisions.
 
 When moving to Container Apps, mount the Azure Files share at `/data` so uploads and the vector store persist (the create script below registers storage on the environment but does not attach it to the app — add the volume mount explicitly):
 
@@ -114,9 +114,24 @@ az containerapp update \
 
 ---
 
-## Option 1: Azure Container Apps (Recommended)
+## Option 1: Azure Container Apps (Recommended container approach)
 
 Azure Container Apps provides a fully managed serverless container platform with built-in scaling, HTTPS ingress, and persistent storage.
+
+### Container Apps architecture diagram
+
+```mermaid
+flowchart LR
+    Client[Client / Swagger UI] -->|HTTPS| Ingress[Container Apps ingress]
+    Ingress --> App[Container App revision<br/>ASP.NET Core API]
+    App -->|reads secrets / settings| Secrets[Container App secrets]
+    App -->|analysis + embeddings| OpenAI[OpenAI / Azure OpenAI]
+    App -->|uploads| Uploads["Azure Files<br/>/data/uploads"]
+    App -->|local vector store| Vectors["Azure Files<br/>/data/vectors.json"]
+    ACR[Azure Container Registry] -->|pull image| App
+    Env[Container Apps environment] -->|registers storage| Uploads
+    Env -->|registers storage| Vectors
+```
 
 ### Step 1: Build and Push Container Image
 
@@ -260,6 +275,23 @@ Use the [Quick start scripts](#quick-start-aci-scripts-fastest-path-today) above
 
 ACI is ideal for a POC or demo today: one container, public DNS, Azure Files mounted at `/data`. It does not auto-scale and serves HTTP only. To update env vars or the image, recreate the container (`create-aci.sh --redeploy`) or delete and redeploy.
 
+### ACI architecture diagram
+
+```mermaid
+flowchart LR
+    EnvFile[repo .env] -->|OPENAI_API_KEY + app settings| Script[create-aci.sh]
+    Script -->|build linux/amd64 image| Docker[Docker]
+    Docker -->|push image| ACR[Azure Container Registry]
+    Script -->|create / reuse| Storage[Storage account]
+    Storage --> Share[Azure Files share: data]
+    ACR -->|pull image| ACI[Azure Container Instance<br/>ASP.NET Core API]
+    Share -->|mount /data| ACI
+    Client[Client / Swagger UI] -->|HTTP :8080| ACI
+    ACI -->|analysis + embeddings| OpenAI[OpenAI / Azure OpenAI]
+    ACI -->|uploads| Uploads["/data/uploads"]
+    ACI -->|local vector store| Vectors["/data/vectors.json"]
+```
+
 ### Automated deploy
 
 ```bash
@@ -324,6 +356,68 @@ curl "http://${FQDN}:8080/api/health"
 5. View existing variables or recreate with updated values
 
 > **Note**: ACI requires recreating the container to update environment variables. Use `create-aci.sh --redeploy` or the CLI.
+
+---
+
+## Option 3: Azure Functions + Azure AI Search (Future Iteration)
+
+For a future production iteration, split the current API into Azure Functions and move vector storage/search from the local JSON file under `/data` into Azure AI Search. This would make the app more serverless: HTTP-triggered functions handle uploads, job creation, health checks, and result retrieval, while queue-triggered or durable functions run the longer document analysis workflow.
+
+### Target architecture
+
+```mermaid
+flowchart LR
+    Client[Client / API consumer] -->|HTTPS| HttpFuncs[HTTP-triggered Azure Functions<br/>upload, jobs, status, results, health]
+    HttpFuncs -->|store uploads| Blob[Blob Storage<br/>documents + artifacts]
+    HttpFuncs -->|create work item| Queue[Queue Storage / Service Bus]
+    HttpFuncs -->|read / write job state| JobStore[Durable job state<br/>Table Storage / Cosmos DB / SQL]
+    Queue --> Workers[Queue-triggered or Durable Functions<br/>analysis workers]
+    Workers -->|read documents| Blob
+    Workers -->|generate embeddings / analysis| OpenAI[Azure OpenAI]
+    Workers -->|index chunks + vectors| Search[Azure AI Search<br/>vector + hybrid index]
+    Workers -->|update status + result refs| JobStore
+    HttpFuncs -->|query results / similar chunks| Search
+    HttpFuncs --> Insights[Application Insights]
+    Workers --> Insights
+    KeyVault[Key Vault / managed identity] --> HttpFuncs
+    KeyVault --> Workers
+```
+
+- **HTTP-triggered Azure Functions** expose the current API surface, for example upload, create analysis job, get job status, get job result, and health.
+- **Queue Storage or Service Bus** decouples request handling from long-running analysis work.
+- **Durable Functions** can orchestrate multi-step analysis where progress, retries, fan-out/fan-in, or cancellation matter.
+- **Blob Storage** stores uploaded documents and generated artifacts instead of using the container filesystem.
+- **Azure AI Search** stores document chunks, embeddings, and metadata, replacing `VectorStore__PersistPath=/data/vectors.json`.
+- **Azure OpenAI** generates embeddings and analysis responses, ideally accessed with managed identity where supported.
+- **Application Insights** captures function logs, traces, dependency calls, and job diagnostics.
+
+### Pros
+
+- **Scales to zero for idle usage**: HTTP and background processing only run when requests or queued work arrive.
+- **Better scaling model for ingestion**: queue-triggered workers can scale independently from the public API endpoints.
+- **Managed vector search**: Azure AI Search provides indexing, filtering, hybrid search, vector search, and operational tooling instead of maintaining a local vector JSON file.
+- **More resilient long-running jobs**: Durable Functions or queue-based workers provide retries, checkpoints, and clearer job orchestration than a single always-on container.
+- **Less filesystem coupling**: uploads and vector data move to Azure-managed services, avoiding Azure Files mounts and container restart edge cases.
+
+### Cons
+
+- **Larger refactor**: the current ASP.NET Core API is packaged as one container; Azure Functions need smaller endpoint handlers and background workflows.
+- **More Azure services to operate**: Functions, Storage, queues, AI Search, OpenAI, Key Vault, and Application Insights all need provisioning, configuration, and monitoring.
+- **Cold start and timeout considerations**: HTTP functions should stay thin, and longer analysis must run in background functions or Durable Functions.
+- **Different local development model**: developers need the Azure Functions Core Tools and local emulators or dev Azure resources for queues, blobs, and search.
+- **Search schema and indexing need design**: Azure AI Search requires explicit index fields, vector dimensions, metadata filters, and migration/rebuild plans.
+
+### Changes needed
+
+- Split the API endpoints in `src/ConflictDuplicationDetector.Api` into Azure Function triggers, preserving the current request/response models where possible.
+- Move job state out of in-memory or local process state into durable storage, such as Table Storage, Cosmos DB, SQL, or Durable Functions instance state.
+- Replace the local vector store implementation with an Azure AI Search-backed implementation for chunk indexing, vector similarity search, and metadata filtering.
+- Store uploaded files in Blob Storage and pass blob references through job messages instead of writing to `Storage__UploadsPath`.
+- Add queue or Service Bus messages for background analysis so HTTP requests can return a job ID quickly.
+- Introduce Azure Functions configuration, such as `host.json`, `local.settings.json` templates, app settings, managed identity, and Key Vault references.
+- Add infrastructure scripts or Bicep/Terraform for Function App, Storage, Azure AI Search, Azure OpenAI, Application Insights, and role assignments.
+- Update Swagger/OpenAPI generation because Azure Functions do not automatically use the current ASP.NET Core middleware and endpoint mapping in the same way.
+- Add integration tests for the Azure AI Search vector store and queue-driven job lifecycle.
 
 ---
 
