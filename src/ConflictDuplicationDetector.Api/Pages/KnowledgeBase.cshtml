@@ -1,0 +1,114 @@
+@page
+@model KnowledgeBaseModel
+@{
+    ViewData["Title"] = "Knowledge base";
+}
+
+<h1 class="govuk-heading-xl">Knowledge base</h1>
+<p class="govuk-body">View the documents and chunks currently loaded in the knowledge base.</p>
+
+@if (!Model.OpenAiConfigured)
+{
+    <div class="govuk-error-summary" role="alert">
+        <h2 class="govuk-heading-m">OpenAI API key is not configured</h2>
+        <p class="govuk-body">Set <code>OPENAI_API_KEY</code> before loading the knowledge base contents.</p>
+    </div>
+}
+
+@if (Model.KnowledgeBase is not null)
+{
+    <dl class="govuk-summary-list">
+        <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">Provider</dt>
+            <dd class="govuk-summary-list__value">@Model.KnowledgeBase.Provider</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">Knowledge base exists</dt>
+            <dd class="govuk-summary-list__value">@(Model.KnowledgeBase.Exists ? "Yes" : "No")</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">Documents</dt>
+            <dd class="govuk-summary-list__value">@Model.KnowledgeBase.DocumentCount</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">Chunks loaded</dt>
+            <dd class="govuk-summary-list__value">@Model.KnowledgeBase.ChunkCount</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">Persist path</dt>
+            <dd class="govuk-summary-list__value"><code>@Model.KnowledgeBase.PersistPath</code></dd>
+        </div>
+    </dl>
+
+    @if (!Model.KnowledgeBase.Exists)
+    {
+        <div class="app-card">
+            <h2 class="govuk-heading-m">No knowledge base found</h2>
+            <p class="govuk-body">Upload documents to create the knowledge base.</p>
+            <a class="govuk-button" asp-page="/Upload">Upload documents</a>
+        </div>
+    }
+    else if (Model.KnowledgeBase.DocumentCount == 0)
+    {
+        <p class="govuk-body">The knowledge base exists, but no chunks are currently loaded.</p>
+    }
+    else
+    {
+        <h2 class="govuk-heading-l">Documents</h2>
+        <table class="govuk-table">
+            <thead>
+                <tr>
+                    <th scope="col">Document</th>
+                    <th scope="col">Chunks</th>
+                    <th scope="col">Document ID</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var document in Model.KnowledgeBase.Documents)
+                {
+                    <tr>
+                        <td>@document.SourceFile</td>
+                        <td>@document.ChunkCount</td>
+                        <td><code>@document.DocumentId</code></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <h2 class="govuk-heading-l">Chunks</h2>
+        <table class="govuk-table">
+            <thead>
+                <tr>
+                    <th scope="col">Document</th>
+                    <th scope="col">Chunk</th>
+                    <th scope="col">Location</th>
+                    <th scope="col">Content excerpt</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var chunk in Model.KnowledgeBase.Chunks)
+                {
+                    <tr>
+                        <td>@chunk.SourceFile</td>
+                        <td>@chunk.ChunkIndex</td>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(chunk.PageNumber))
+                            {
+                                <span>Page @chunk.PageNumber</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(chunk.Section))
+                            {
+                                <span>@(string.IsNullOrWhiteSpace(chunk.PageNumber) ? "" : ", ")@chunk.Section</span>
+                            }
+                            @if (string.IsNullOrWhiteSpace(chunk.PageNumber) && string.IsNullOrWhiteSpace(chunk.Section))
+                            {
+                                <span>-</span>
+                            }
+                        </td>
+                        <td>@chunk.ContentExcerpt</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}

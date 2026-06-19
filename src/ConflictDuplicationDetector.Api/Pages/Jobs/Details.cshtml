@@ -1,0 +1,68 @@
+@page "{id:guid}"
+@model ConflictDuplicationDetector.Api.Pages.Jobs.DetailsModel
+@{
+    ViewData["Title"] = "Job details";
+}
+
+@section Head {
+    @if (Model.ShouldRefresh)
+    {
+        <meta http-equiv="refresh" content="5" />
+    }
+}
+
+@if (Model.Job is not null)
+{
+    <h1 class="govuk-heading-xl">@Model.Job.Type job</h1>
+
+    @if (Model.Job.Status == JobStatus.Completed)
+    {
+        <div class="govuk-panel">
+            <h2 class="govuk-panel__title">Job completed</h2>
+            <p>@Model.Job.JobId</p>
+        </div>
+    }
+    else if (Model.Job.Status == JobStatus.Failed)
+    {
+        <div class="govuk-error-summary" role="alert">
+            <h2 class="govuk-heading-m">Job failed</h2>
+            <p class="govuk-body">@Model.Job.Error</p>
+        </div>
+    }
+    else
+    {
+        <div class="app-card">
+            <h2 class="govuk-heading-m">Job in progress</h2>
+            <p class="govuk-body">This page refreshes every 5 seconds while the job is pending or running.</p>
+        </div>
+    }
+
+    <dl class="govuk-summary-list">
+        <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">Job ID</dt>
+            <dd class="govuk-summary-list__value">@Model.Job.JobId</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">Provider</dt>
+            <dd class="govuk-summary-list__value">@Model.Job.Provider</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">Status</dt>
+            <dd class="govuk-summary-list__value">@Model.Job.Status</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">Created</dt>
+            <dd class="govuk-summary-list__value">@Model.Job.CreatedAt.ToLocalTime().ToString("F")</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">Completed</dt>
+            <dd class="govuk-summary-list__value">@(Model.Job.CompletedAt?.ToLocalTime().ToString("F") ?? "-")</dd>
+        </div>
+    </dl>
+
+    <partial name="_JobResult" model="Model.Job" />
+
+    <p class="govuk-body">
+        <a asp-page="/Jobs/Index">View all jobs</a>
+    </p>
+}

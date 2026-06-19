@@ -1,0 +1,13 @@
+@page
+@model ErrorModel
+@{
+    ViewData["Title"] = "There is a problem with the service";
+}
+
+<h1 class="govuk-heading-xl">There is a problem with the service</h1>
+<p class="govuk-body">Try again later.</p>
+
+@if (!string.IsNullOrWhiteSpace(Model.RequestId))
+{
+    <p class="govuk-body">Request ID: <code>@Model.RequestId</code></p>
+}

@@ -1,0 +1,95 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-xl">Check documents for conflicts and duplication</h1>
+        <p class="govuk-body">Use this service to build a knowledge base from policy or guidance documents, then analyse it for duplicated content, conflicting statements and inconsistent language.</p>
+        @if (!Model.OpenAiConfigured)
+        {
+            <div class="govuk-error-summary" role="alert">
+                <h2 class="govuk-heading-m">OpenAI API key is not configured</h2>
+                <p class="govuk-body">Set <code>OPENAI_API_KEY</code> before uploading or analysing documents.</p>
+            </div>
+        }
+        <a class="govuk-button" asp-page="/Upload">Start by uploading documents</a>
+    </div>
+    <aside class="govuk-grid-column-one-third">
+        <div class="app-card">
+            <h2 class="govuk-heading-m">Knowledge base</h2>
+            @if (Model.KnowledgeBase is null)
+            {
+                <p class="govuk-body">Status unavailable.</p>
+            }
+            else
+            {
+                <dl class="govuk-summary-list">
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Provider</dt>
+                        <dd class="govuk-summary-list__value">@Model.KnowledgeBase.Provider</dd>
+                    </div>
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Exists</dt>
+                        <dd class="govuk-summary-list__value">@(Model.KnowledgeBase.Exists ? "Yes" : "No")</dd>
+                    </div>
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Chunks</dt>
+                        <dd class="govuk-summary-list__value">@Model.KnowledgeBase.ChunkCount</dd>
+                    </div>
+                </dl>
+                <p class="govuk-body">
+                    <a asp-page="/KnowledgeBase">View knowledge base contents</a>
+                </p>
+            }
+        </div>
+    </aside>
+</div>
+
+<h2 class="govuk-heading-l">What you can do</h2>
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-one-third app-card">
+        <h3 class="govuk-heading-m"><a asp-page="/Analyse">Analyse documents</a></h3>
+        <p class="govuk-body">Find duplication, conflicts and inconsistencies in the knowledge base.</p>
+    </div>
+    <div class="govuk-grid-column-one-third app-card">
+        <h3 class="govuk-heading-m"><a asp-page="/Check">Check a document</a></h3>
+        <p class="govuk-body">Compare a new file against the current knowledge base without adding it.</p>
+    </div>
+    <div class="govuk-grid-column-one-third app-card">
+        <h3 class="govuk-heading-m"><a asp-page="/Chat">Ask a question</a></h3>
+        <p class="govuk-body">Ask a natural-language question about the ingested documents.</p>
+    </div>
+</div>
+
+<h2 class="govuk-heading-l">Recent jobs</h2>
+@if (Model.RecentJobs.Count == 0)
+{
+    <p class="govuk-body">No jobs have been submitted yet.</p>
+}
+else
+{
+    <table class="govuk-table">
+        <thead>
+            <tr>
+                <th scope="col">Type</th>
+                <th scope="col">Status</th>
+                <th scope="col">Created</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var job in Model.RecentJobs)
+            {
+                <tr>
+                    <td>@job.Type</td>
+                    <td>@job.Status</td>
+                    <td>@job.CreatedAt.ToLocalTime().ToString("g")</td>
+                    <td><a asp-page="/Jobs/Details" asp-route-id="@job.JobId">View job</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

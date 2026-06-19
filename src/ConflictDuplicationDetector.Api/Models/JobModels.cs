@@ -50,5 +50,28 @@ public record ChatJobRequest(string Message);
 /// <summary>Knowledge base status.</summary>
 public record KnowledgeBaseStatusResponse(string Provider, bool Exists, int ChunkCount, string PersistPath);
 
+/// <summary>Detailed knowledge base contents for the server-rendered UI.</summary>
+public record KnowledgeBaseDetailsResponse(
+    string Provider,
+    bool Exists,
+    int ChunkCount,
+    int DocumentCount,
+    string PersistPath,
+    IReadOnlyList<KnowledgeBaseDocumentResponse> Documents,
+    IReadOnlyList<KnowledgeBaseChunkResponse> Chunks);
+
+/// <summary>Document summary derived from loaded chunks.</summary>
+public record KnowledgeBaseDocumentResponse(string DocumentId, string SourceFile, int ChunkCount);
+
+/// <summary>Chunk summary derived from the vector store.</summary>
+public record KnowledgeBaseChunkResponse(
+    string ChunkId,
+    string DocumentId,
+    string SourceFile,
+    int ChunkIndex,
+    string? PageNumber,
+    string? Section,
+    string ContentExcerpt);
+
 /// <summary>API health check response.</summary>
 public record HealthResponse(string Provider, string Status, bool OpenAiConfigured, bool KnowledgeBaseExists, int ChunkCount);

@@ -1,6 +1,6 @@
 # Deploying to Azure
 
-This guide covers deploying the Conflict & Duplication Detector API as a container to Azure using **Azure Container Apps** or **Azure Container Instances**. It also outlines a future serverless option using **Azure Functions** and **Azure AI Search**.
+This guide covers deploying the Conflict & Duplication Detector web application as a container to Azure using **Azure Container Apps** or **Azure Container Instances**. The same ASP.NET Core host serves the GOV.UK-styled server-rendered frontend, the `/api/*` endpoints, and Swagger documentation at `/swagger`. It also outlines a future serverless option using **Azure Functions** and **Azure AI Search**.
 
 ## Prerequisites
 
@@ -8,6 +8,34 @@ This guide covers deploying the Conflict & Duplication Detector API as a contain
 - Azure CLI installed (`az --version`)
 - Docker installed (for building/pushing images)
 - OpenAI API key
+
+## Application URLs
+
+The container listens on port `8080`. The same ASP.NET Core host serves the GOV.UK-styled Razor Pages frontend, the HTTP API, and Swagger.
+
+### Web frontend pages
+
+| Path | Purpose |
+|------|---------|
+| `/` | Dashboard with knowledge-base status and recent jobs |
+| `/Upload` | Upload documents to the knowledge base |
+| `/Analyse` | Run duplication, conflict, or inconsistency analysis |
+| `/Check` | Check a single document against the knowledge base |
+| `/Chat` | Ask a natural-language question about ingested documents |
+| `/Jobs` | List recent background jobs |
+| `/Jobs/{jobId}` | Job status and results (auto-refreshes while pending or running) |
+
+The frontend follows the [GOV.UK Design System](https://design-system.service.gov.uk/) with a shared layout, phase banner, service navigation, validation summary, forms, tables, panels, and structured result rendering.
+
+### API and documentation
+
+| Path | Purpose |
+|------|---------|
+| `/swagger` | Swagger UI for API documentation and manual API calls |
+| `/api/*` | HTTP API endpoints for automation and integrations |
+| `/api/health` | Health check endpoint |
+
+When `Auth__ApiKey` is configured, `/api/*` routes require the `X-Api-Key` header except `/api/health`. Browser pages and static assets do not require an API key. The server-rendered frontend keeps API and OpenAI keys on the server and calls the application services in-process.
 
 ## Configuration via Environment Variables
 
@@ -59,7 +87,7 @@ cp .env.example .env   # if needed — set OPENAI_API_KEY, Auth__ApiKey, Azure O
 ./deployments/azure/destroy-aci.sh --yes
 ```
 
-The create script prints the public URL when done. ACI serves **HTTP** on port **8080** (not HTTPS).
+The create script prints the public URL when done. ACI serves **HTTP** on port **8080** (not HTTPS). The root URL opens the web frontend; API documentation remains available at `/swagger`.
 
 | Script | Purpose |
 |--------|---------|
@@ -92,7 +120,7 @@ Deploy state is written to `deployments/azure/.aci-deploy.env` (gitignored) so `
 
 ### Next step: Azure Container Apps
 
-ACI is the quickest way to get running today. For a longer-lived deployment, **Azure Container Apps** is the logical next step — it adds HTTPS ingress, scaling, and managed revisions.
+ACI is the quickest way to get running today. For a longer-lived deployment, **Azure Container Apps** is the logical next step — it adds HTTPS ingress, scaling, and managed revisions. Keep the app at a single replica until job state is moved out of the in-memory queue, otherwise a browser polling a job may hit an instance that did not create that job.
 
 When moving to Container Apps, mount the Azure Files share at `/data` so uploads and the vector store persist (the create script below registers storage on the environment but does not attach it to the app — add the volume mount explicitly):
 

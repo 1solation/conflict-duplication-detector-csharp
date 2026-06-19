@@ -1,0 +1,134 @@
+@using System.Text.Json
+@using ConflictDuplicationDetector.Core.Services
+@model JobStatusResponse
+
+@if (Model.Status != JobStatus.Completed || Model.Result is null)
+{
+    return;
+}
+
+<h2 class="govuk-heading-l">Result</h2>
+
+@switch (Model.Result)
+{
+    case IngestionResult ingestion:
+        <dl class="govuk-summary-list">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Documents processed</dt>
+                <dd class="govuk-summary-list__value">@ingestion.DocumentsProcessed</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Chunks created</dt>
+                <dd class="govuk-summary-list__value">@ingestion.ChunksCreated</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Chunks skipped</dt>
+                <dd class="govuk-summary-list__value">@ingestion.ChunksSkipped</dd>
+            </div>
+        </dl>
+        @if (ingestion.Errors.Count > 0)
+        {
+            <h3 class="govuk-heading-m">Errors</h3>
+            <ul class="govuk-list">
+                @foreach (var error in ingestion.Errors)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        }
+        break;
+
+    case ChatResponse chat:
+        <dl class="govuk-summary-list">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Intent</dt>
+                <dd class="govuk-summary-list__value">@chat.Intent</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Results referenced</dt>
+                <dd class="govuk-summary-list__value">@chat.ResultCount</dd>
+            </div>
+        </dl>
+        <div class="app-card">
+            <p class="govuk-body app-pre-wrap">@chat.Message</p>
+        </div>
+        break;
+
+    case AnalysisResult analysis:
+        <dl class="govuk-summary-list">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Documents</dt>
+                <dd class="govuk-summary-list__value">@analysis.Metrics.TotalDocuments</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Chunks</dt>
+                <dd class="govuk-summary-list__value">@analysis.Metrics.TotalChunks</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Duplications</dt>
+                <dd class="govuk-summary-list__value">@analysis.Duplications.Count</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Conflicts</dt>
+                <dd class="govuk-summary-list__value">@analysis.Conflicts.Count</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Inconsistencies</dt>
+                <dd class="govuk-summary-list__value">@analysis.Inconsistencies.Count</dd>
+            </div>
+        </dl>
+
+        @if (analysis.Duplications.Count > 0)
+        {
+            <h3 class="govuk-heading-m">Duplications</h3>
+            @foreach (var item in analysis.Duplications)
+            {
+                <div class="app-result">
+                    <h4 class="govuk-heading-s">@item.Type duplication (@item.SimilarityScore.ToString("P0"))</h4>
+                    <p class="govuk-body">@item.Explanation</p>
+                    <p class="govuk-body"><strong>@item.Source.FileName</strong> and <strong>@item.Target.FileName</strong></p>
+                </div>
+            }
+        }
+
+        @if (analysis.Conflicts.Count > 0)
+        {
+            <h3 class="govuk-heading-m">Conflicts</h3>
+            @foreach (var item in analysis.Conflicts)
+            {
+                <div class="app-result">
+                    <h4 class="govuk-heading-s">@item.Severity @item.Type</h4>
+                    <p class="govuk-body">@item.Explanation</p>
+                    @if (!string.IsNullOrWhiteSpace(item.Resolution))
+                    {
+                        <p class="govuk-body"><strong>Suggested resolution:</strong> @item.Resolution</p>
+                    }
+                </div>
+            }
+        }
+
+        @if (analysis.Inconsistencies.Count > 0)
+        {
+            <h3 class="govuk-heading-m">Inconsistencies</h3>
+            @foreach (var item in analysis.Inconsistencies)
+            {
+                <div class="app-result">
+                    <h4 class="govuk-heading-s">@item.Type inconsistency</h4>
+                    <p class="govuk-body">@item.Explanation</p>
+                    @if (item.Variants.Count > 0)
+                    {
+                        <p class="govuk-body"><strong>Variants:</strong> @string.Join(", ", item.Variants)</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(item.SuggestedStandard))
+                    {
+                        <p class="govuk-body"><strong>Suggested standard:</strong> @item.SuggestedStandard</p>
+                    }
+                </div>
+            }
+        }
+        break;
+
+    default:
+        <pre class="app-card app-pre-wrap">@JsonSerializer.Serialize(Model.Result, new JsonSerializerOptions { WriteIndented = true })</pre>
+        break;
+}

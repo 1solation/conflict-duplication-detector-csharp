@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" class="govuk-template">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - Document analysis</title>
+    <link rel="stylesheet" href="~/css/govuk-app.css" asp-append-version="true" />
+    @await RenderSectionAsync("Head", required: false)
+</head>
+
+<body class="govuk-template__body">
+    <a class="govuk-skip-link" href="#main-content">Skip to main content</a>
+
+    <header class="govuk-header" role="banner">
+        <div class="govuk-width-container govuk-header__container">
+            <a class="govuk-header__link govuk-header__link--homepage" asp-page="/Index">
+                <span class="govuk-header__logotype">GOV.UK</span>
+            </a>
+            <a class="govuk-header__service-name" asp-page="/Index">Document analysis service</a>
+        </div>
+    </header>
+
+    <div class="govuk-phase-banner govuk-width-container">
+        <p class="govuk-phase-banner__content">
+            <strong class="govuk-tag">Prototype</strong>
+            <span>This service is being developed and may change.</span>
+        </p>
+    </div>
+
+    <nav class="app-service-navigation" aria-label="Service menu">
+        <div class="govuk-width-container">
+            <a asp-page="/Index">Home</a>
+            <a asp-page="/KnowledgeBase">Knowledge base</a>
+            <a asp-page="/Upload">Upload</a>
+            <a asp-page="/Analyse">Analyse</a>
+            <a asp-page="/Check">Check a document</a>
+            <a asp-page="/Chat">Ask a question</a>
+            <a asp-page="/Jobs/Index">Jobs</a>
+            <a href="/swagger">API docs</a>
+        </div>
+    </nav>
+
+    <div class="govuk-width-container">
+        <main class="govuk-main-wrapper" id="main-content" role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="govuk-footer" role="contentinfo">
+        <div class="govuk-width-container">
+            <p class="govuk-footer__meta">Built for document conflict and duplication analysis.</p>
+        </div>
+    </footer>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>
