@@ -26,9 +26,9 @@ public class OpenAIConfiguration
     public string? AzureEndpoint { get; set; }
     public string? AzureApiVersion { get; set; } = "2024-02-01";
     public string? ApiKeyHeader { get; set; }
-    public string Model { get; set; } = "gpt-4o";
+    public string Model { get; set; } = "gpt-5.1";
     public string EmbeddingModel { get; set; } = "text-embedding-3-small";
-    
+
     public bool UseAzure => Provider == AIProvider.AzureOpenAI || !string.IsNullOrEmpty(AzureEndpoint);
 }
 

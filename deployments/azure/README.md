@@ -53,7 +53,7 @@ The application can be configured entirely through environment variables, making
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `OpenAI__Provider` | AI provider: `OpenAI` or `AzureOpenAI` | `OpenAI` |
-| `OpenAI__Model` | Model deployment name for analysis | `gpt-4o` |
+| `OpenAI__Model` | Model deployment name for analysis | `gpt-5.1` |
 | `OpenAI__EmbeddingModel` | Model for embeddings | `text-embedding-3-small` |
 | `OpenAI__AzureEndpoint` | Azure OpenAI endpoint URL | `null` |
 | `OpenAI__AzureApiVersion` | Azure OpenAI API version | `2024-02-01` |
@@ -272,7 +272,7 @@ az containerapp create \
    |------|--------|-------|
    | `OPENAI_API_KEY` | Reference a secret | `openai-key` |
    | `Auth__ApiKey` | Reference a secret | `api-key` |
-   | `OpenAI__Model` | Manual entry | `gpt-4o` |
+   | `OpenAI__Model` | Manual entry | `gpt-5.1` |
    | `OpenAI__EmbeddingModel` | Manual entry | `text-embedding-3-small` |
    | `VectorStore__PersistPath` | Manual entry | `/data/vectors.json` |
    | `Storage__UploadsPath` | Manual entry | `/data/uploads` |
@@ -350,7 +350,7 @@ az container create \
     OpenAI__AzureEndpoint=https://your-endpoint \
     OpenAI__AzureApiVersion=2024-10-21 \
     OpenAI__ApiKeyHeader=api-key \
-    OpenAI__Model=gpt-4o \
+    OpenAI__Model=gpt-5.1 \
     OpenAI__EmbeddingModel=text-embedding-3-small \
     VectorStore__PersistPath=/data/vectors.json \
     Storage__UploadsPath=/data/uploads \
@@ -486,7 +486,7 @@ For the Department for Education OpenAI sandbox:
 OpenAI__Provider=AzureOpenAI
 OpenAI__AzureEndpoint=your-url
 OpenAI__ApiKeyHeader=Api-Key
-OpenAI__Model=gpt-4o
+OpenAI__Model=gpt-5.1
 OpenAI__EmbeddingModel=text-embedding-3-small
 OPENAI_API_KEY=your-dfe-api-key
 ```

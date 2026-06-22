@@ -70,7 +70,7 @@ FILE_SHARE="${ACI_FILE_SHARE:-data}"
 
 # App config from .env with sensible defaults
 OpenAI__Provider="${OpenAI__Provider:-OpenAI}"
-OpenAI__Model="${OpenAI__Model:-gpt-4o}"
+OpenAI__Model="${OpenAI__Model:-gpt-5.1}"
 OpenAI__EmbeddingModel="${OpenAI__EmbeddingModel:-text-embedding-3-small}"
 OpenAI__AzureEndpoint="${OpenAI__AzureEndpoint:-}"
 OpenAI__AzureApiVersion="${OpenAI__AzureApiVersion:-2024-02-01}"

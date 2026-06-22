@@ -303,7 +303,7 @@ Override paths and AI settings via environment variables (see [`.env.example`](.
 | `Auth__ApiKey`             | (recommended)        |
 | `OpenAI__Provider`         | `OpenAI`             |
 | `OpenAI__AzureEndpoint`    | (empty)              |
-| `OpenAI__Model`            | `gpt-4o`             |
+| `OpenAI__Model`            | `gpt-5.1`             |
 | `OpenAI__EmbeddingModel`   | `text-embedding-3-small` |
 
 
@@ -355,7 +355,7 @@ az containerapp create \
 | Variable | Description |
 |----------|-------------|
 | `OPENAI_API_KEY` | OpenAI API key (use secret reference) |
-| `OpenAI__Model` | Model name (default: `gpt-4o`) |
+| `OpenAI__Model` | Model name (default: `gpt-5.1`) |
 | `OpenAI__EmbeddingModel` | Embedding model (default: `text-embedding-3-small`) |
 | `VectorStore__PersistPath` | Vector store path (default: `/data/vectors.json`) |
 | `Storage__UploadsPath` | Uploads path (default: `/data/uploads`) |
@@ -436,7 +436,7 @@ dotnet run --project src/ConflictDuplicationDetector.Api
   "OpenAI": {
     "ApiKey": "env:OPENAI_API_KEY",
     "Provider": "OpenAI",
-    "Model": "gpt-4o",
+    "Model": "gpt-5.1",
     "EmbeddingModel": "text-embedding-3-small",
     "AzureEndpoint": null,
     "AzureApiVersion": "2024-02-01",
@@ -466,7 +466,7 @@ Environment variables use double underscores (`__`) for nested configuration (e.
 | `OPENAI_API_KEY` | OpenAI/Azure OpenAI API key (required) | - |
 | `Auth__ApiKey` | Inbound API key for the HTTP API (`X-Api-Key` header) | - |
 | `OpenAI__Provider` | AI provider: `OpenAI` or `AzureOpenAI` | `OpenAI` |
-| `OpenAI__Model` | Chat model for analysis | `gpt-4o` |
+| `OpenAI__Model` | Chat model for analysis | `gpt-5.1` |
 | `OpenAI__EmbeddingModel` | Embedding model | `text-embedding-3-small` |
 | `OpenAI__AzureEndpoint` | Azure OpenAI endpoint URL | `null` |
 | `OpenAI__AzureApiVersion` | Azure OpenAI API version | `2024-02-01` |
