@@ -5,7 +5,7 @@
 }
 
 <h1 class="govuk-heading-xl">Knowledge base</h1>
-<p class="govuk-body">View the documents and chunks currently loaded in the knowledge base.</p>
+<p class="govuk-body">View the status, documents and chunks currently loaded in the knowledge base.</p>
 
 @if (!Model.OpenAiConfigured)
 {
@@ -15,24 +15,78 @@
     </div>
 }
 
+@if (Model.Dashboard is not null)
+{
+    <div class="app-card">
+        <h2 class="govuk-heading-m">Overview</h2>
+        <p class="govuk-body">
+            <strong class="@Model.ReadinessTagClass">@Model.ReadinessTagText</strong>
+        </p>
+
+        @if (Model.Dashboard.Readiness == KnowledgeBaseReadiness.Ready)
+        {
+            <p class="govuk-body">
+                <strong>@Model.Dashboard.DocumentCount</strong> @(Model.Dashboard.DocumentCount == 1 ? "document" : "documents")
+                ·
+                <strong>@Model.Dashboard.ChunkCount</strong> @(Model.Dashboard.ChunkCount == 1 ? "chunk" : "chunks")
+            </p>
+
+            @if (!string.IsNullOrWhiteSpace(Model.Dashboard.FileTypeBreakdown))
+            {
+                <p class="govuk-body">@Model.Dashboard.FileTypeBreakdown</p>
+            }
+
+            @if (Model.Dashboard.DocumentCount > 0)
+            {
+                <p class="govuk-body">Average @Model.Dashboard.AverageChunksPerDocument.ToString("0.#") chunks per document</p>
+            }
+        }
+        else if (Model.Dashboard.Readiness == KnowledgeBaseReadiness.Empty)
+        {
+            <p class="govuk-body">Upload documents to create the knowledge base.</p>
+            <a class="govuk-button" asp-page="/Upload">Upload documents</a>
+        }
+
+        @if (Model.LastIngest is not null)
+        {
+            <div class="govuk-inset-text">
+                <p class="govuk-body">
+                    <strong>Last updated:</strong>
+                    @Model.LastIngest.CompletedAt.ToLocalTime().ToString("g")
+                    @if (Model.LastIngest.DocumentsProcessed > 0)
+                    {
+                        <span>· @Model.LastIngest.DocumentsProcessed @(Model.LastIngest.DocumentsProcessed == 1 ? "document" : "documents") added</span>
+                    }
+                </p>
+                <p class="govuk-body">
+                    <a asp-page="/Jobs/Details" asp-route-id="@Model.LastIngest.JobId">View ingest job</a>
+                </p>
+            </div>
+        }
+
+        @if (Model.LastAnalysis is not null)
+        {
+            <div class="govuk-inset-text">
+                <p class="govuk-body">
+                    <strong>Last analysis:</strong>
+                    @Model.LastAnalysis.Duplications @(Model.LastAnalysis.Duplications == 1 ? "duplication" : "duplications"),
+                    @Model.LastAnalysis.Conflicts @(Model.LastAnalysis.Conflicts == 1 ? "conflict" : "conflicts"),
+                    @Model.LastAnalysis.Inconsistencies @(Model.LastAnalysis.Inconsistencies == 1 ? "inconsistency" : "inconsistencies")
+                </p>
+                <p class="govuk-body">
+                    <a asp-page="/Jobs/Details" asp-route-id="@Model.LastAnalysis.JobId">View analysis job</a>
+                </p>
+            </div>
+        }
+    </div>
+}
+
 @if (Model.KnowledgeBase is not null)
 {
     <dl class="govuk-summary-list">
         <div class="govuk-summary-list__row">
             <dt class="govuk-summary-list__key">Provider</dt>
             <dd class="govuk-summary-list__value">@Model.KnowledgeBase.Provider</dd>
-        </div>
-        <div class="govuk-summary-list__row">
-            <dt class="govuk-summary-list__key">Knowledge base exists</dt>
-            <dd class="govuk-summary-list__value">@(Model.KnowledgeBase.Exists ? "Yes" : "No")</dd>
-        </div>
-        <div class="govuk-summary-list__row">
-            <dt class="govuk-summary-list__key">Documents</dt>
-            <dd class="govuk-summary-list__value">@Model.KnowledgeBase.DocumentCount</dd>
-        </div>
-        <div class="govuk-summary-list__row">
-            <dt class="govuk-summary-list__key">Chunks loaded</dt>
-            <dd class="govuk-summary-list__value">@Model.KnowledgeBase.ChunkCount</dd>
         </div>
         <div class="govuk-summary-list__row">
             <dt class="govuk-summary-list__key">Persist path</dt>
