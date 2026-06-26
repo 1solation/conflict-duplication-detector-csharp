@@ -128,41 +128,5 @@
                 }
             </tbody>
         </table>
-
-        <h2 class="govuk-heading-l">Chunks</h2>
-        <table class="govuk-table">
-            <thead>
-                <tr>
-                    <th scope="col">Document</th>
-                    <th scope="col">Chunk</th>
-                    <th scope="col">Location</th>
-                    <th scope="col">Content excerpt</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var chunk in Model.KnowledgeBase.Chunks)
-                {
-                    <tr>
-                        <td>@chunk.SourceFile</td>
-                        <td>@chunk.ChunkIndex</td>
-                        <td>
-                            @if (!string.IsNullOrWhiteSpace(chunk.PageNumber))
-                            {
-                                <span>Page @chunk.PageNumber</span>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(chunk.Section))
-                            {
-                                <span>@(string.IsNullOrWhiteSpace(chunk.PageNumber) ? "" : ", ")@chunk.Section</span>
-                            }
-                            @if (string.IsNullOrWhiteSpace(chunk.PageNumber) && string.IsNullOrWhiteSpace(chunk.Section))
-                            {
-                                <span>-</span>
-                            }
-                        </td>
-                        <td>@chunk.ContentExcerpt</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
     }
 }

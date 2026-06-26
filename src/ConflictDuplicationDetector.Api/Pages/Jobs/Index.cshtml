@@ -29,8 +29,8 @@ else
                 <tr>
                     <td>@job.Type</td>
                     <td>@job.Status</td>
-                    <td>@job.CreatedAt.ToLocalTime().ToString("g")</td>
-                    <td>@(job.CompletedAt?.ToLocalTime().ToString("g") ?? "-")</td>
+                    <td>@job.CreatedAt.ToUniversalTime().ToString("g") UTC</td>
+                    <td>@(job.CompletedAt?.ToUniversalTime().ToString("g") ?? "-") UTC</td>
                     <td><a asp-page="/Jobs/Details" asp-route-id="@job.JobId">View job</a></td>
                 </tr>
             }
