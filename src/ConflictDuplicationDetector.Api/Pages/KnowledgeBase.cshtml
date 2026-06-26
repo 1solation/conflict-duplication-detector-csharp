@@ -109,24 +109,64 @@
     else
     {
         <h2 class="govuk-heading-l">Documents</h2>
+
+        <form method="get" class="app-card">
+            <div class="govuk-form-group">
+                <label class="govuk-label" asp-for="DocumentName">Filter by document name</label>
+                <input class="govuk-input" asp-for="DocumentName" type="text" />
+            </div>
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" asp-for="SortOrder">Sort by upload time</label>
+                <select class="govuk-select" asp-for="SortOrder">
+                    <option value="latest">Latest first</option>
+                    <option value="earliest">Earliest first</option>
+                </select>
+            </div>
+
+            <button class="govuk-button" type="submit">Apply filters</button>
+            @if (Model.HasDocumentFilters)
+            {
+                <a asp-page="/KnowledgeBase">Clear filters</a>
+            }
+        </form>
+
+        @if (Model.DocumentRows.Count == 0)
+        {
+            <p class="govuk-body">No documents match the current filter.</p>
+        }
+        else
+        {
         <table class="govuk-table">
             <thead>
                 <tr>
                     <th scope="col">Document</th>
+                    <th scope="col">Uploaded</th>
                     <th scope="col">Chunks</th>
                     <th scope="col">Document ID</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var document in Model.KnowledgeBase.Documents)
+                @foreach (var document in Model.DocumentRows)
                 {
                     <tr>
-                        <td>@document.SourceFile</td>
+                        <td>@document.DocumentName</td>
+                        <td>
+                            @if (document.UploadedAt is DateTime uploadedAt)
+                            {
+                                <span>@uploadedAt.ToUniversalTime().ToString("g") UTC</span>
+                            }
+                            else
+                            {
+                                <span>-</span>
+                            }
+                        </td>
                         <td>@document.ChunkCount</td>
                         <td><code>@document.DocumentId</code></td>
                     </tr>
                 }
             </tbody>
         </table>
+        }
     }
 }
