@@ -159,6 +159,76 @@ textarea:focus {
   color: var(--govuk-dark-grey);
 }
 
+.govuk-footer__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  font-size: 16px;
+}
+
+.govuk-footer__meta-item--grow {
+  flex: 1;
+}
+
+.govuk-footer__inline-list {
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.govuk-footer__inline-list-item {
+  display: inline-block;
+  margin-right: 15px;
+  margin-bottom: 5px;
+}
+
+.govuk-footer__link {
+  color: var(--govuk-dark-grey);
+}
+
+.govuk-footer__licence-logo {
+  display: inline-block;
+  margin-right: 10px;
+  color: var(--govuk-dark-grey);
+  vertical-align: top;
+}
+
+.govuk-footer__licence-description {
+  display: inline-block;
+  max-width: 730px;
+}
+
+.govuk-footer__copyright-logo {
+  display: inline-block;
+  min-width: 125px;
+  padding-top: 115px;
+  background-image: url("../images/govuk-crest.svg");
+  background-repeat: no-repeat;
+  background-position: 50% 0;
+  background-size: 125px 102px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.govuk-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (min-width: 641px) {
+  .govuk-footer__meta {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+}
+
 .govuk-heading-xl,
 .govuk-heading-l,
 .govuk-heading-m,

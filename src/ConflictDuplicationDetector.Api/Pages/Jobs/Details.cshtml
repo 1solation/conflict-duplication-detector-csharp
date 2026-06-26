@@ -52,11 +52,11 @@
         </div>
         <div class="govuk-summary-list__row">
             <dt class="govuk-summary-list__key">Created</dt>
-            <dd class="govuk-summary-list__value">@Model.Job.CreatedAt.ToLocalTime().ToString("F")</dd>
+            <dd class="govuk-summary-list__value">@Model.Job.CreatedAt.ToUniversalTime().ToString("g") UTC</dd>
         </div>
         <div class="govuk-summary-list__row">
             <dt class="govuk-summary-list__key">Completed</dt>
-            <dd class="govuk-summary-list__value">@(Model.Job.CompletedAt?.ToLocalTime().ToString("F") ?? "-")</dd>
+            <dd class="govuk-summary-list__value">@(Model.Job.CompletedAt?.ToUniversalTime().ToString("g") ?? "-") UTC</dd>
         </div>
     </dl>
 

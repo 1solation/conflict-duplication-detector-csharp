@@ -5,7 +5,8 @@
 }
 
 <h1 class="govuk-heading-xl">Check documents for conflicts and duplication</h1>
-<p class="govuk-body">Use this service to build a knowledge base from policy or guidance documents, then analyse it for duplicated content, conflicting statements and inconsistent language.</p>
+<p class="govuk-body">Use this service to build a knowledge base from policy or guidance documents, then analyse it for
+    duplicated content, conflicting statements and inconsistent language.</p>
 
 @if (!Model.OpenAiConfigured)
 {
@@ -64,7 +65,7 @@ else
                 <tr>
                     <td>@job.Type</td>
                     <td>@job.Status</td>
-                    <td>@job.CreatedAt.ToLocalTime().ToString("g")</td>
+                    <td>@job.CreatedAt.ToUniversalTime().ToString("g") UTC</td>
                     <td><a asp-page="/Jobs/Details" asp-route-id="@job.JobId">View job</a></td>
                 </tr>
             }

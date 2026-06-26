@@ -52,7 +52,7 @@
             <div class="govuk-inset-text">
                 <p class="govuk-body">
                     <strong>Last updated:</strong>
-                    @Model.LastIngest.CompletedAt.ToLocalTime().ToString("g")
+                    @Model.LastIngest.CompletedAt.ToUniversalTime().ToString("g") UTC
                     @if (Model.LastIngest.DocumentsProcessed > 0)
                     {
                         <span>· @Model.LastIngest.DocumentsProcessed @(Model.LastIngest.DocumentsProcessed == 1 ? "document" : "documents") added</span>
