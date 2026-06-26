@@ -20,7 +20,7 @@ public class ConfigurationTests
     {
         var config = new OpenAIConfiguration();
 
-        Assert.Equal("gpt-5-nano", config.Model);
+        Assert.Equal("gpt-5.1", config.Model);
         Assert.Equal("text-embedding-3-small", config.EmbeddingModel);
     }
 

@@ -55,6 +55,9 @@
         break;
 
     case AnalysisResult analysis:
+        var totalFindings = analysis.Duplications.Count + analysis.Conflicts.Count + analysis.Inconsistencies.Count;
+        var filterId = $"analysis-results-{Model.JobId:N}";
+
         <dl class="govuk-summary-list">
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">Documents</dt>
@@ -78,53 +81,186 @@
             </div>
         </dl>
 
-        @if (analysis.Duplications.Count > 0)
+        @if (totalFindings == 0)
         {
-            <h3 class="govuk-heading-m">Duplications</h3>
-            @foreach (var item in analysis.Duplications)
-            {
-                <div class="app-result">
-                    <h4 class="govuk-heading-s">@item.Type duplication (@item.SimilarityScore.ToString("P0"))</h4>
-                    <p class="govuk-body">@item.Explanation</p>
-                    <p class="govuk-body"><strong>@item.Source.FileName</strong> and <strong>@item.Target.FileName</strong></p>
-                </div>
-            }
+            <p class="govuk-body">No analysis findings were returned for this job.</p>
         }
-
-        @if (analysis.Conflicts.Count > 0)
+        else
         {
-            <h3 class="govuk-heading-m">Conflicts</h3>
-            @foreach (var item in analysis.Conflicts)
-            {
-                <div class="app-result">
-                    <h4 class="govuk-heading-s">@item.Severity @item.Type</h4>
-                    <p class="govuk-body">@item.Explanation</p>
-                    @if (!string.IsNullOrWhiteSpace(item.Resolution))
-                    {
-                        <p class="govuk-body"><strong>Suggested resolution:</strong> @item.Resolution</p>
-                    }
+            <div id="@filterId" class="app-analysis-results">
+                <div class="app-analysis-filters" aria-label="Filter analysis results">
+                    <span class="govuk-label">Show result types</span>
+                    <label class="app-analysis-filter">
+                        <input type="checkbox" value="Conflict" checked />
+                        Conflicts
+                    </label>
+                    <label class="app-analysis-filter">
+                        <input type="checkbox" value="Duplication" checked />
+                        Duplications
+                    </label>
+                    <label class="app-analysis-filter">
+                        <input type="checkbox" value="Inconsistency" checked />
+                        Inconsistencies
+                    </label>
                 </div>
-            }
-        }
 
-        @if (analysis.Inconsistencies.Count > 0)
-        {
-            <h3 class="govuk-heading-m">Inconsistencies</h3>
-            @foreach (var item in analysis.Inconsistencies)
-            {
-                <div class="app-result">
-                    <h4 class="govuk-heading-s">@item.Type inconsistency</h4>
-                    <p class="govuk-body">@item.Explanation</p>
-                    @if (item.Variants.Count > 0)
-                    {
-                        <p class="govuk-body"><strong>Variants:</strong> @string.Join(", ", item.Variants)</p>
+                <table class="govuk-table app-analysis-table">
+                    <caption class="govuk-visually-hidden">Analysis findings</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Finding</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Score / severity</th>
+                            <th scope="col">Documents</th>
+                            <th scope="col">Evidence</th>
+                            <th scope="col">Explanation</th>
+                            <th scope="col">Recommendation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in analysis.Conflicts)
+                        {
+                            <tr data-analysis-type="Conflict">
+                                <td><span class="govuk-tag govuk-tag--red">Conflict</span></td>
+                                <td>@item.Type</td>
+                                <td>@item.Severity</td>
+                                <td>
+                                    <ul class="app-analysis-list">
+                                        <li><strong>Source:</strong> @AnalysisResultDisplayFormatter.FormatDocumentReference(item.Source)</li>
+                                        <li><strong>Target:</strong> @AnalysisResultDisplayFormatter.FormatDocumentReference(item.Target)</li>
+                                    </ul>
+                                </td>
+                                <td>
+                                    @if (string.IsNullOrWhiteSpace(item.SourceStatement) && string.IsNullOrWhiteSpace(item.TargetStatement))
+                                    {
+                                        <span>-</span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(item.SourceStatement))
+                                    {
+                                        <p class="app-analysis-evidence"><strong>Source:</strong> @item.SourceStatement</p>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(item.TargetStatement))
+                                    {
+                                        <p class="app-analysis-evidence"><strong>Target:</strong> @item.TargetStatement</p>
+                                    }
+                                </td>
+                                <td>@item.Explanation</td>
+                                <td>@AnalysisResultDisplayFormatter.ValueOrDash(item.Resolution)</td>
+                            </tr>
+                        }
+
+                        @foreach (var item in analysis.Duplications)
+                        {
+                            <tr data-analysis-type="Duplication">
+                                <td><span class="govuk-tag">Duplication</span></td>
+                                <td>@item.Type</td>
+                                <td>@item.SimilarityScore.ToString("P0")</td>
+                                <td>
+                                    <ul class="app-analysis-list">
+                                        <li><strong>Source:</strong> @AnalysisResultDisplayFormatter.FormatDocumentReference(item.Source)</li>
+                                        <li><strong>Target:</strong> @AnalysisResultDisplayFormatter.FormatDocumentReference(item.Target)</li>
+                                    </ul>
+                                </td>
+                                <td>
+                                    @if (string.IsNullOrWhiteSpace(item.SourceExcerpt) && string.IsNullOrWhiteSpace(item.TargetExcerpt))
+                                    {
+                                        <span>-</span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(item.SourceExcerpt))
+                                    {
+                                        <p class="app-analysis-evidence"><strong>Source:</strong> @item.SourceExcerpt</p>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(item.TargetExcerpt))
+                                    {
+                                        <p class="app-analysis-evidence"><strong>Target:</strong> @item.TargetExcerpt</p>
+                                    }
+                                </td>
+                                <td>@item.Explanation</td>
+                                <td>-</td>
+                            </tr>
+                        }
+
+                        @foreach (var item in analysis.Inconsistencies)
+                        {
+                            <tr data-analysis-type="Inconsistency">
+                                <td><span class="govuk-tag govuk-tag--grey">Inconsistency</span></td>
+                                <td>@item.Type</td>
+                                <td>-</td>
+                                <td>
+                                    @if (item.Occurrences.Count > 0)
+                                    {
+                                        <ul class="app-analysis-list">
+                                            <li><strong>Source:</strong> @AnalysisResultDisplayFormatter.FormatDocumentReference(item.Occurrences[0])</li>
+                                            @if (item.Occurrences.Count > 1)
+                                            {
+                                                @foreach (var occurrence in item.Occurrences.Skip(1))
+                                                {
+                                                    <li><strong>Target:</strong> @AnalysisResultDisplayFormatter.FormatDocumentReference(occurrence)</li>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <li><strong>Target:</strong> -</li>
+                                            }
+                                        </ul>
+                                    }
+                                    else
+                                    {
+                                        <span>-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.Variants.Count > 0)
+                                    {
+                                        <p class="app-analysis-evidence"><strong>Variants:</strong> @string.Join(", ", item.Variants)</p>
+                                    }
+                                    else
+                                    {
+                                        <span>-</span>
+                                    }
+                                </td>
+                                <td>@item.Explanation</td>
+                                <td>@AnalysisResultDisplayFormatter.ValueOrDash(item.SuggestedStandard)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <p class="govuk-body app-analysis-no-results" hidden>No analysis findings match the selected filters.</p>
+            </div>
+
+            <script>
+                (() => {
+                    const container = document.getElementById('@filterId');
+                    if (!container) {
+                        return;
                     }
-                    @if (!string.IsNullOrWhiteSpace(item.SuggestedStandard))
-                    {
-                        <p class="govuk-body"><strong>Suggested standard:</strong> @item.SuggestedStandard</p>
-                    }
-                </div>
-            }
+
+                    const filters = Array.from(container.querySelectorAll('.app-analysis-filter input[type="checkbox"]'));
+                    const rows = Array.from(container.querySelectorAll('tbody tr[data-analysis-type]'));
+                    const noResults = container.querySelector('.app-analysis-no-results');
+
+                    const applyFilters = () => {
+                        const selectedTypes = new Set(filters.filter(filter => filter.checked).map(filter => filter.value));
+                        let visibleRows = 0;
+
+                        rows.forEach(row => {
+                            const isVisible = selectedTypes.has(row.dataset.analysisType);
+                            row.hidden = !isVisible;
+                            if (isVisible) {
+                                visibleRows += 1;
+                            }
+                        });
+
+                        if (noResults) {
+                            noResults.hidden = visibleRows > 0;
+                        }
+                    };
+
+                    filters.forEach(filter => filter.addEventListener('change', applyFilters));
+                    applyFilters();
+                })();
+            </script>
         }
         break;
 
@@ -132,3 +268,4 @@
         <pre class="app-card app-pre-wrap">@JsonSerializer.Serialize(Model.Result, new JsonSerializerOptions { WriteIndented = true })</pre>
         break;
 }
+

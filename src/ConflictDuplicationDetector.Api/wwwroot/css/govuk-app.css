@@ -419,3 +419,57 @@ textarea:focus {
   padding-bottom: 20px;
   border-bottom: 1px solid var(--govuk-mid-grey);
 }
+
+.app-analysis-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid var(--govuk-mid-grey);
+  background: var(--govuk-light-grey);
+}
+
+.app-analysis-results {
+  max-width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.app-analysis-filters .govuk-label {
+  margin-bottom: 0;
+}
+
+.app-analysis-filter {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.app-analysis-table {
+  max-width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  font-size: 16px;
+  table-layout: fixed;
+}
+
+.app-analysis-table th,
+.app-analysis-table td {
+  overflow-wrap: anywhere;
+}
+
+.app-analysis-list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.app-analysis-evidence {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.app-analysis-evidence:last-child {
+  margin-bottom: 0;
+}
