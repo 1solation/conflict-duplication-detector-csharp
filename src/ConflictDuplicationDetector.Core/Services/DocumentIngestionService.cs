@@ -34,12 +34,14 @@ public class DocumentIngestionService : IDocumentIngestionService
     public async Task<IngestionResult> IngestFileAsync(string filePath, CancellationToken cancellationToken = default)
     {
         var result = new IngestionResult();
+        var fileType = GetFileType(filePath);
         
         try
         {
             var parser = _parserFactory.GetParser(filePath);
             if (parser == null)
             {
+                result.IngestedFiles.Add(new IngestedFileResult(filePath, fileType, false));
                 result.Errors.Add($"No parser available for file: {filePath}");
                 return result;
             }
@@ -66,10 +68,12 @@ public class DocumentIngestionService : IDocumentIngestionService
             
             result.ChunksCreated = newChunks;
             result.ChunksSkipped = skippedChunks;
+            result.IngestedFiles.Add(new IngestedFileResult(filePath, fileType, true));
             result.Success = true;
         }
         catch (Exception ex)
         {
+            result.IngestedFiles.Add(new IngestedFileResult(filePath, fileType, false));
             result.Errors.Add($"Error processing {filePath}: {ex.Message}");
         }
         
@@ -89,6 +93,7 @@ public class DocumentIngestionService : IDocumentIngestionService
             result.DocumentsProcessed += fileResult.DocumentsProcessed;
             result.ChunksCreated += fileResult.ChunksCreated;
             result.ChunksSkipped += fileResult.ChunksSkipped;
+            result.IngestedFiles.AddRange(fileResult.IngestedFiles);
             result.Errors.AddRange(fileResult.Errors);
         }
 
@@ -122,6 +127,7 @@ public class DocumentIngestionService : IDocumentIngestionService
             result.DocumentsProcessed += fileResult.DocumentsProcessed;
             result.ChunksCreated += fileResult.ChunksCreated;
             result.ChunksSkipped += fileResult.ChunksSkipped;
+            result.IngestedFiles.AddRange(fileResult.IngestedFiles);
             result.Errors.AddRange(fileResult.Errors);
         }
         
@@ -133,6 +139,14 @@ public class DocumentIngestionService : IDocumentIngestionService
     {
         return await _vectorStore.GetChunkCountAsync(cancellationToken);
     }
+
+    private static string GetFileType(string filePath)
+    {
+        var extension = Path.GetExtension(filePath).TrimStart('.');
+        return string.IsNullOrWhiteSpace(extension)
+            ? "Unknown"
+            : extension.ToUpperInvariant();
+    }
 }
 
 public class IngestionResult
@@ -141,7 +155,10 @@ public class IngestionResult
     public int DocumentsProcessed { get; set; }
     public int ChunksCreated { get; set; }
     public int ChunksSkipped { get; set; }
+    public List<IngestedFileResult> IngestedFiles { get; set; } = new();
     public List<string> Errors { get; set; } = new();
     
     public int TotalChunks => ChunksCreated + ChunksSkipped;
 }
+
+public record IngestedFileResult(string FilePath, string FileType, bool Success);

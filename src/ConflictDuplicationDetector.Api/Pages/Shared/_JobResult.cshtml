@@ -26,15 +26,45 @@
                 <dd class="govuk-summary-list__value">@ingestion.ChunksSkipped</dd>
             </div>
         </dl>
+
+        @if (ingestion.IngestedFiles.Count > 0)
+        {
+            <h3 class="govuk-heading-m">Files ingested</h3>
+            <table class="govuk-table">
+                <thead>
+                    <tr>
+                        <th scope="col">File</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var file in ingestion.IngestedFiles)
+                    {
+                        <tr>
+                            <td>@AnalysisResultDisplayFormatter.GetDisplayDocumentName(file.FilePath)</td>
+                            <td>@file.FileType</td>
+                            <td>
+                                @if (file.Success)
+                                {
+                                    <span class="govuk-tag govuk-tag--green">Success</span>
+                                }
+                                else
+                                {
+                                    <span class="govuk-tag govuk-tag--red">Failure</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
         @if (ingestion.Errors.Count > 0)
         {
-            <h3 class="govuk-heading-m">Errors</h3>
-            <ul class="govuk-list">
-                @foreach (var error in ingestion.Errors)
-                {
-                    <li>@error</li>
-                }
-            </ul>
+            <div class="govuk-error-summary" role="alert">
+                <h3 class="govuk-heading-m">Files could not be uploaded at this time, please try again</h3>
+            </div>
         }
         break;
 
@@ -60,23 +90,23 @@
 
         <dl class="govuk-summary-list">
             <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">Documents</dt>
+                <dt class="govuk-summary-list__key">Documents Added</dt>
                 <dd class="govuk-summary-list__value">@analysis.Metrics.TotalDocuments</dd>
             </div>
             <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">Chunks</dt>
+                <dt class="govuk-summary-list__key">Chunks Analysed</dt>
                 <dd class="govuk-summary-list__value">@analysis.Metrics.TotalChunks</dd>
             </div>
             <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">Duplications</dt>
+                <dt class="govuk-summary-list__key">Duplications Found</dt>
                 <dd class="govuk-summary-list__value">@analysis.Duplications.Count</dd>
             </div>
             <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">Conflicts</dt>
+                <dt class="govuk-summary-list__key">Conflicts Found</dt>
                 <dd class="govuk-summary-list__value">@analysis.Conflicts.Count</dd>
             </div>
             <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">Inconsistencies</dt>
+                <dt class="govuk-summary-list__key">Inconsistencies Found</dt>
                 <dd class="govuk-summary-list__value">@analysis.Inconsistencies.Count</dd>
             </div>
         </dl>
@@ -122,16 +152,22 @@
                         {
                             <tr data-analysis-type="Conflict">
                                 <td><span class="govuk-tag govuk-tag--red">Conflict</span></td>
-                                <td>@item.Type</td>
+                                <td>@AnalysisResultDisplayFormatter.FormatEnumName(item.Type)</td>
                                 <td>@item.Severity</td>
                                 <td>
                                     <ul class="app-analysis-list">
-                                        <li><strong>Source:</strong> @AnalysisResultDisplayFormatter.FormatDocumentReference(item.Source)</li>
-                                        <li><strong>Target:</strong> @AnalysisResultDisplayFormatter.FormatDocumentReference(item.Target)</li>
+                                        <li><strong>Source:</strong>
+                                            @AnalysisResultDisplayFormatter.FormatDocumentReference(item.Source)</li>
+                                        @if (AnalysisResultDisplayFormatter.ShouldDisplayDocumentReference(item.Target))
+                                        {
+                                            <li><strong>Target:</strong>
+                                                @AnalysisResultDisplayFormatter.FormatDocumentReference(item.Target)</li>
+                                        }
                                     </ul>
                                 </td>
                                 <td>
-                                    @if (string.IsNullOrWhiteSpace(item.SourceStatement) && string.IsNullOrWhiteSpace(item.TargetStatement))
+                                    @if (string.IsNullOrWhiteSpace(item.SourceStatement) &&
+                                                        string.IsNullOrWhiteSpace(item.TargetStatement))
                                     {
                                         <span>-</span>
                                     }
@@ -153,12 +189,17 @@
                         {
                             <tr data-analysis-type="Duplication">
                                 <td><span class="govuk-tag">Duplication</span></td>
-                                <td>@item.Type</td>
+                                <td>@AnalysisResultDisplayFormatter.FormatEnumName(item.Type)</td>
                                 <td>@item.SimilarityScore.ToString("P0")</td>
                                 <td>
                                     <ul class="app-analysis-list">
-                                        <li><strong>Source:</strong> @AnalysisResultDisplayFormatter.FormatDocumentReference(item.Source)</li>
-                                        <li><strong>Target:</strong> @AnalysisResultDisplayFormatter.FormatDocumentReference(item.Target)</li>
+                                        <li><strong>Source:</strong>
+                                            @AnalysisResultDisplayFormatter.FormatDocumentReference(item.Source)</li>
+                                        @if (AnalysisResultDisplayFormatter.ShouldDisplayDocumentReference(item.Target))
+                                        {
+                                            <li><strong>Target:</strong>
+                                                @AnalysisResultDisplayFormatter.FormatDocumentReference(item.Target)</li>
+                                        }
                                     </ul>
                                 </td>
                                 <td>
@@ -184,18 +225,23 @@
                         {
                             <tr data-analysis-type="Inconsistency">
                                 <td><span class="govuk-tag govuk-tag--grey">Inconsistency</span></td>
-                                <td>@item.Type</td>
+                                <td>@AnalysisResultDisplayFormatter.FormatEnumName(item.Type)</td>
                                 <td>-</td>
                                 <td>
                                     @if (item.Occurrences.Count > 0)
                                     {
                                         <ul class="app-analysis-list">
-                                            <li><strong>Source:</strong> @AnalysisResultDisplayFormatter.FormatDocumentReference(item.Occurrences[0])</li>
+                                            <li><strong>Source:</strong>
+                                                @AnalysisResultDisplayFormatter.FormatDocumentReference(item.Occurrences[0])</li>
                                             @if (item.Occurrences.Count > 1)
                                             {
                                                 @foreach (var occurrence in item.Occurrences.Skip(1))
                                                 {
-                                                    <li><strong>Target:</strong> @AnalysisResultDisplayFormatter.FormatDocumentReference(occurrence)</li>
+                                                    @if (AnalysisResultDisplayFormatter.ShouldDisplayDocumentReference(occurrence))
+                                                    {
+                                                        <li><strong>Target:</strong> @AnalysisResultDisplayFormatter.FormatDocumentReference(occurrence)
+                                                        </li>
+                                                    }
                                                 }
                                             }
                                             else
@@ -265,7 +311,7 @@
         break;
 
     default:
-        <pre class="app-card app-pre-wrap">@JsonSerializer.Serialize(Model.Result, new JsonSerializerOptions { WriteIndented = true })</pre>
+        <pre
+            class="app-card app-pre-wrap">@JsonSerializer.Serialize(Model.Result, new JsonSerializerOptions { WriteIndented = true })</pre>
         break;
 }
-

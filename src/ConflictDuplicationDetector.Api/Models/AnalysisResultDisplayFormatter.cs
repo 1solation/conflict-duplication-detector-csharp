@@ -4,8 +4,19 @@ namespace ConflictDuplicationDetector.Api.Models;
 
 public static class AnalysisResultDisplayFormatter
 {
+    private const string NoConflictingDocumentFound = "No conflicting document found";
+
     public static string ValueOrDash(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "-" : value;
+
+    public static string FormatEnumName(Enum value) =>
+        AddSpacesBeforeUppercase(value.ToString());
+
+    public static bool ShouldDisplayDocumentReference(DocumentReference document) =>
+        !string.Equals(
+            GetDisplayDocumentName(document.FileName),
+            NoConflictingDocumentFound,
+            StringComparison.OrdinalIgnoreCase);
 
     public static string FormatDocumentReference(DocumentReference document)
     {
@@ -53,5 +64,29 @@ public static class AnalysisResultDisplayFormatter
         }
 
         return displayName.Replace("_", " ");
+    }
+
+    private static string AddSpacesBeforeUppercase(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return value;
+        }
+
+        var displayName = new System.Text.StringBuilder(value.Length);
+
+        for (var index = 0; index < value.Length; index++)
+        {
+            var character = value[index];
+
+            if (index > 0 && char.IsUpper(character))
+            {
+                displayName.Append(' ');
+            }
+
+            displayName.Append(character);
+        }
+
+        return displayName.ToString();
     }
 }

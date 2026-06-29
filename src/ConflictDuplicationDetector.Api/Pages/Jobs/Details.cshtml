@@ -56,7 +56,7 @@
         </div>
         <div class="govuk-summary-list__row">
             <dt class="govuk-summary-list__key">Completed</dt>
-            <dd class="govuk-summary-list__value">@((Model.Job.CompletedAt?.ToUniversalTime().ToString("g") + " UTC") ?? "-")
+            <dd class="govuk-summary-list__value">@(Model.Job.CompletedAt is DateTime completedAt ? $"{completedAt.ToUniversalTime():g} UTC" : "-")
             </dd>
         </div>
     </dl>
@@ -64,6 +64,11 @@
     <partial name="_JobResult" model="Model.Job" />
 
     <p class="govuk-body">
+        @if (Model.Job.Status == JobStatus.Completed && Model.Job.Type == JobType.Ingest)
+        {
+            <a asp-page="/KnowledgeBase">View knowledge base</a>
+            <span> | </span>
+        }
         <a asp-page="/Jobs/Index">View all jobs</a>
     </p>
 }
