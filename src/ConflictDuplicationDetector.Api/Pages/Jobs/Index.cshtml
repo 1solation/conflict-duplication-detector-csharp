@@ -1,0 +1,39 @@
+@page
+@model ConflictDuplicationDetector.Api.Pages.Jobs.IndexModel
+@{
+    ViewData["Title"] = "Jobs";
+}
+
+<h1 class="govuk-heading-xl">Jobs</h1>
+<p class="govuk-body">View recent background jobs and their results.</p>
+
+@if (Model.Jobs.Count == 0)
+{
+    <p class="govuk-body">No jobs have been submitted yet.</p>
+}
+else
+{
+    <table class="govuk-table">
+        <thead>
+            <tr>
+                <th scope="col">Type</th>
+                <th scope="col">Status</th>
+                <th scope="col">Created</th>
+                <th scope="col">Completed</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var job in Model.Jobs)
+            {
+                <tr>
+                    <td>@job.Type</td>
+                    <td>@job.Status</td>
+                    <td>@job.CreatedAt.ToUniversalTime().ToString("g") UTC</td>
+                    <td>@(job.CompletedAt is DateTime completedAt ? $"{completedAt.ToUniversalTime():g} UTC" : "-")</td>
+                    <td><a asp-page="/Jobs/Details" asp-route-id="@job.JobId">View job</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

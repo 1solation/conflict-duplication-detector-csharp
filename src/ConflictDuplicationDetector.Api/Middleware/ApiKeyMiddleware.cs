@@ -4,13 +4,6 @@ public class ApiKeyMiddleware(RequestDelegate next, IConfiguration configuration
 {
     private const string ApiKeyHeader = "X-Api-Key";
 
-    private static readonly HashSet<string> ExemptPaths =
-    [
-        "/api/health",
-        "/swagger",
-        "/"
-    ];
-
     public async Task InvokeAsync(HttpContext context)
     {
         if (IsExempt(context.Request.Path))
@@ -47,11 +40,9 @@ public class ApiKeyMiddleware(RequestDelegate next, IConfiguration configuration
 
     private static bool IsExempt(PathString path)
     {
-        foreach (var exempt in ExemptPaths)
-        {
-            if (path.StartsWithSegments(exempt, StringComparison.OrdinalIgnoreCase))
-                return true;
-        }
-        return false;
+        if (!path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return path.StartsWithSegments("/api/health", StringComparison.OrdinalIgnoreCase);
     }
 }

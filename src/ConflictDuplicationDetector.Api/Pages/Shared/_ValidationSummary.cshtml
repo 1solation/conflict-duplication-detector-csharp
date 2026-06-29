@@ -1,0 +1,12 @@
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="govuk-error-summary" role="alert" aria-labelledby="error-summary-title" tabindex="-1">
+        <h2 class="govuk-heading-m" id="error-summary-title">There is a problem</h2>
+        <ul class="govuk-list">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(value => value.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}

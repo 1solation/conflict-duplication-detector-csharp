@@ -1,0 +1,74 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<h1 class="govuk-heading-xl">Check documents for conflicts and duplication</h1>
+<p class="govuk-body">Use this service to build a knowledge base from policy or guidance documents, then analyse it for
+    duplicated content, conflicting statements and inconsistent language.</p>
+
+@if (!Model.OpenAiConfigured)
+{
+    <div class="govuk-error-summary" role="alert">
+        <h2 class="govuk-heading-m">OpenAI API key is not configured</h2>
+        <p class="govuk-body">Set <code>OPENAI_API_KEY</code> before uploading or analysing documents.</p>
+    </div>
+}
+else
+{
+    <p class="govuk-body">
+        <a class="govuk-button" asp-page="/Upload">Upload documents</a>
+        <a class="govuk-button govuk-button--secondary" asp-page="/KnowledgeBase">View knowledge base</a>
+    </p>
+}
+
+<h2 class="govuk-heading-l">What you can do</h2>
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-one-third app-card">
+        <h3 class="govuk-heading-m"><a asp-page="/KnowledgeBase">Knowledge base</a></h3>
+        <p class="govuk-body">See what documents are loaded, chunk counts, and recent activity.</p>
+    </div>
+    <div class="govuk-grid-column-one-third app-card">
+        <h3 class="govuk-heading-m"><a asp-page="/Analyse">Analyse documents</a></h3>
+        <p class="govuk-body">Find duplication, conflicts and inconsistencies in the knowledge base.</p>
+    </div>
+    <div class="govuk-grid-column-one-third app-card">
+        <h3 class="govuk-heading-m"><a asp-page="/Check">Check a document</a></h3>
+        <p class="govuk-body">Compare a new file against the current knowledge base without adding it.</p>
+    </div>
+    <div class="govuk-grid-column-one-third app-card">
+        <h3 class="govuk-heading-m"><a asp-page="/Chat">Ask a question</a></h3>
+        <p class="govuk-body">Ask a natural-language question about the ingested documents.</p>
+    </div>
+</div>
+
+<h2 class="govuk-heading-l">Recent jobs</h2>
+@if (Model.RecentJobs.Count == 0)
+{
+    <p class="govuk-body">No jobs have been submitted yet.</p>
+}
+else
+{
+    <table class="govuk-table">
+        <thead>
+            <tr>
+                <th scope="col">Type</th>
+                <th scope="col">Status</th>
+                <th scope="col">Created</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var job in Model.RecentJobs)
+            {
+                <tr>
+                    <td>@job.Type</td>
+                    <td>@job.Status</td>
+                    <td>@job.CreatedAt.ToUniversalTime().ToString("g") UTC</td>
+                    <td><a asp-page="/Jobs/Details" asp-route-id="@job.JobId">View job</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

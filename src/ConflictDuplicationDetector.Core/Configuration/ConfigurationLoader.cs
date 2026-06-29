@@ -15,9 +15,9 @@ public static class ConfigurationLoader
         appConfig.OpenAI.AzureEndpoint = GetConfigValue(configuration, "OpenAI:AzureEndpoint", "AZURE_OPENAI_ENDPOINT");
         appConfig.OpenAI.AzureApiVersion = configuration["OpenAI:AzureApiVersion"] ?? "2024-02-01";
         appConfig.OpenAI.ApiKeyHeader = configuration["OpenAI:ApiKeyHeader"];
-        appConfig.OpenAI.Model = configuration["OpenAI:Model"] ?? "gpt-4o";
+        appConfig.OpenAI.Model = configuration["OpenAI:Model"] ?? "gpt-5.1";
         appConfig.OpenAI.EmbeddingModel = configuration["OpenAI:EmbeddingModel"] ?? "text-embedding-3-small";
-        
+
         var providerStr = configuration["OpenAI:Provider"];
         if (!string.IsNullOrEmpty(providerStr) && Enum.TryParse<AIProvider>(providerStr, ignoreCase: true, out var provider))
         {

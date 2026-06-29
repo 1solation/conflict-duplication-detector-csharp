@@ -22,6 +22,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
+builder.Services.AddRazorPages();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -84,9 +85,10 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = "swagger";
 });
 
+app.UseStaticFiles();
 app.UseMiddleware<ApiKeyMiddleware>();
 
-app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
+app.MapRazorPages();
 app.MapDetectorApi();
 
 var uploadsPath = builder.Configuration["Storage:UploadsPath"] ?? "./data/uploads";

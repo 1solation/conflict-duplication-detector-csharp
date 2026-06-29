@@ -1,0 +1,25 @@
+@page
+@model UploadModel
+@{
+    ViewData["Title"] = "Upload documents";
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-xl">Upload documents</h1>
+        <p class="govuk-body">Upload documents to add them to the knowledge base. Supported formats are PDF, Word, HTML and plain text.</p>
+
+        <partial name="_ValidationSummary" />
+
+        <form method="post" enctype="multipart/form-data">
+            <div class="govuk-form-group">
+                <label class="govuk-label" asp-for="Files">Documents</label>
+                <span class="govuk-hint">You can select more than one file.</span>
+                <span class="govuk-error-message" asp-validation-for="Files"></span>
+                <input class="govuk-file-upload" asp-for="Files" type="file" multiple />
+            </div>
+
+            <button class="govuk-button" type="submit">Upload documents</button>
+        </form>
+    </div>
+</div>

@@ -145,4 +145,114 @@ public class DetectorApplicationService
             count,
             _config.VectorStore.PersistPath);
     }
+
+    public async Task<KnowledgeBaseDashboardSummary> GetKnowledgeBaseDashboardSummaryAsync(CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(_config.OpenAI.ApiKey))
+        {
+            return new KnowledgeBaseDashboardSummary(
+                KnowledgeBaseReadiness.NotConfigured,
+                File.Exists(_config.VectorStore.PersistPath),
+                0,
+                0,
+                0,
+                string.Empty,
+                []);
+        }
+
+        var details = await GetKnowledgeBaseDetailsAsync(cancellationToken);
+        return BuildDashboardSummary(details);
+    }
+
+    public static KnowledgeBaseDashboardSummary BuildDashboardSummary(KnowledgeBaseDetailsResponse details)
+    {
+        var readiness = !details.Exists || details.ChunkCount == 0
+            ? KnowledgeBaseReadiness.Empty
+            : KnowledgeBaseReadiness.Ready;
+
+        var recentDocuments = details.Documents.Take(5).ToList();
+        var averageChunks = details.DocumentCount > 0
+            ? (double)details.ChunkCount / details.DocumentCount
+            : 0;
+
+        var fileTypeBreakdown = string.Join(
+            " · ",
+            details.Documents
+                .GroupBy(document => Path.GetExtension(document.SourceFile).ToLowerInvariant())
+                .OrderByDescending(group => group.Count())
+                .Select(group => $"{group.Count()} {FormatFileType(group.Key)}"));
+
+        return new KnowledgeBaseDashboardSummary(
+            readiness,
+            details.Exists,
+            details.DocumentCount,
+            details.ChunkCount,
+            averageChunks,
+            fileTypeBreakdown,
+            recentDocuments);
+    }
+
+    public async Task<KnowledgeBaseDetailsResponse> GetKnowledgeBaseDetailsAsync(CancellationToken cancellationToken)
+    {
+        var exists = await _coordinator.KnowledgeBaseExistsAsync(cancellationToken);
+        if (!exists)
+        {
+            return new KnowledgeBaseDetailsResponse(
+                ProviderFormatter.Format(_config.OpenAI),
+                false,
+                0,
+                0,
+                _config.VectorStore.PersistPath,
+                [],
+                []);
+        }
+
+        await _coordinator.EnsureLoadedAsync(cancellationToken);
+        var chunks = await _coordinator.VectorStore.GetAllChunksAsync(cancellationToken);
+        var chunkResponses = chunks
+            .OrderBy(chunk => chunk.SourceFile)
+            .ThenBy(chunk => chunk.ChunkIndex)
+            .Select(chunk => new KnowledgeBaseChunkResponse(
+                chunk.ChunkId,
+                chunk.DocumentId,
+                chunk.SourceFile,
+                chunk.ChunkIndex,
+                chunk.PageNumber,
+                chunk.Section,
+                ToExcerpt(chunk.Content)))
+            .ToList();
+
+        var documents = chunkResponses
+            .GroupBy(chunk => new { chunk.DocumentId, chunk.SourceFile })
+            .OrderBy(group => group.Key.SourceFile)
+            .Select(group => new KnowledgeBaseDocumentResponse(
+                group.Key.DocumentId,
+                group.Key.SourceFile,
+                group.Count()))
+            .ToList();
+
+        return new KnowledgeBaseDetailsResponse(
+            ProviderFormatter.Format(_config.OpenAI),
+            true,
+            chunkResponses.Count,
+            documents.Count,
+            _config.VectorStore.PersistPath,
+            documents,
+            chunkResponses);
+    }
+
+    private static string ToExcerpt(string content)
+    {
+        var normalized = string.Join(' ', content.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        return normalized.Length <= 240 ? normalized : $"{normalized[..240]}...";
+    }
+
+    private static string FormatFileType(string extension) => extension switch
+    {
+        ".pdf" => "PDF",
+        ".docx" => "DOCX",
+        ".html" or ".htm" => "HTML",
+        ".txt" => "TXT",
+        _ => string.IsNullOrEmpty(extension) ? "Other" : extension.TrimStart('.').ToUpperInvariant()
+    };
 }

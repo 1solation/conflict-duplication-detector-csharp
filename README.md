@@ -20,16 +20,17 @@ See the [analyse commands example output here](./analyse-command-example-output.
 - **Performance Metrics**: Tracks network time, calculation time, and token usage per agent
 - **Persistent Storage**: SharpVector in-memory vector database with file persistence
 - **Interactive Chat**: Multi-agent chat interface with automatic workflow routing
+- **GOV.UK-styled Web Frontend**: Server-rendered ASP.NET Core pages for uploads, analysis, checks, chat, and job results
 - **CLI Interface**: Full command-line interface for batch processing and single-file checks
 - **File Check**: Compare one document against the ingested knowledge base before adding it
 - **HTTP API**: REST API with Swagger UI and background jobs for long-running work
-- **Docker**: Containerized API with persistent `/data` volume
+- **Docker**: Containerized web application with persistent `/data` volume
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│              CLI / HTTP API (Swagger)                        │
+│              CLI / Web UI / HTTP API                         │
 │         (ingest, analyse, check, chat commands)              │
 └─────────────────────────┬───────────────────────────────────┘
                           │
@@ -166,9 +167,26 @@ Example chat queries:
 - "What terminology inconsistencies exist?"
 - "Run full analysis"
 
-## HTTP API
+## Web Frontend and HTTP API
 
-The API wraps the same Core services as the CLI. Long-running operations return **202 Accepted** with a job ID; poll `GET /api/jobs/{jobId}` until the status is `completed` or `failed`.
+The ASP.NET Core host serves a GOV.UK-styled server-rendered frontend and the HTTP API in a single deployable application. The web frontend uses Razor Pages and follows the [GOV.UK Design System](https://design-system.service.gov.uk/) for layout, typography, forms, and accessibility patterns. It wraps the same Core services as the CLI and API. Long-running operations create background jobs and redirect to a job page that refreshes until the status is `completed` or `failed`.
+
+### Web pages
+
+| Path | Purpose |
+|------|---------|
+| `/` | Dashboard with knowledge-base status and recent jobs |
+| `/Upload` | Upload documents to the knowledge base |
+| `/Analyse` | Run duplication, conflict, or inconsistency analysis |
+| `/Check` | Check a single document against the knowledge base |
+| `/Chat` | Ask a natural-language question about ingested documents |
+| `/Jobs` | List recent background jobs |
+| `/Jobs/{jobId}` | Job status and results (auto-refreshes while pending or running) |
+| `/swagger` | Swagger UI for API documentation and manual API calls |
+
+The UI includes a GOV.UK-style header, phase banner, service navigation, validation summary, error pages, summary lists, tables, panels, and structured result rendering for ingest, analysis, check, and chat jobs.
+
+Browser pages and static assets do not require an API key. When `Auth__ApiKey` is configured, `/api/*` routes still require the `X-Api-Key` header except `/api/health`. The frontend keeps API and OpenAI keys on the server and calls application services in-process.
 
 ### Run locally
 
@@ -177,11 +195,11 @@ export OPENAI_API_KEY="your-api-key-here"
 dotnet run --project src/ConflictDuplicationDetector.Api
 ```
 
-Open Swagger UI at [http://localhost:5080/swagger](http://localhost:5080/swagger).
+Open the web frontend at [http://localhost:5080](http://localhost:5080). Swagger UI is available at [http://localhost:5080/swagger](http://localhost:5080/swagger).
 
 ### Authentication
 
-All API endpoints except `GET /api/health` require an `X-Api-Key` header. Set the key in `appsettings.local.json` (see [Setup for API](#setup-for-api)) or via the `Auth__ApiKey` environment variable.
+All API endpoints except `GET /api/health` require an `X-Api-Key` header. Set the key in `appsettings.local.json` (see [Setup for API](#setup-for-api)) or via the `Auth__ApiKey` environment variable. The server-rendered frontend does not expose this key to the browser.
 
 ```bash
 curl -H "X-Api-Key: your-api-key" http://localhost:5080/api/knowledge-base
@@ -254,7 +272,7 @@ curl -s -X POST http://localhost:8080/api/analysis \
 
 ## Docker
 
-Build and run the API in Docker. Copy the environment template and set your keys:
+Build and run the web application in Docker. Copy the environment template and set your keys:
 
 ```bash
 cp .env.example .env
@@ -270,7 +288,8 @@ export Auth__ApiKey="your-inbound-api-key"
 docker compose up --build
 ```
 
-- API: [http://localhost:8080/swagger](http://localhost:8080/swagger)
+- Web frontend: [http://localhost:8080](http://localhost:8080)
+- Swagger UI: [http://localhost:8080/swagger](http://localhost:8080/swagger)
 - Knowledge base and uploads persist in the `detector-data` volume at `/data`
 
 Override paths and AI settings via environment variables (see [`.env.example`](.env.example)):
@@ -284,7 +303,7 @@ Override paths and AI settings via environment variables (see [`.env.example`](.
 | `Auth__ApiKey`             | (recommended)        |
 | `OpenAI__Provider`         | `OpenAI`             |
 | `OpenAI__AzureEndpoint`    | (empty)              |
-| `OpenAI__Model`            | `gpt-4o`             |
+| `OpenAI__Model`            | `gpt-5.1`             |
 | `OpenAI__EmbeddingModel`   | `text-embedding-3-small` |
 
 
@@ -292,7 +311,7 @@ Override paths and AI settings via environment variables (see [`.env.example`](.
 
 ### Deploy to Azure
 
-The API can be deployed as a container to Azure Container Apps or Azure Container Instances. See the full deployment guide: **[deployments/azure/README.md](deployments/azure/README.md)**
+The web application (GOV.UK frontend, API, and Swagger) can be deployed as a container to Azure Container Apps or Azure Container Instances. See the full deployment guide: **[deployments/azure/README.md](deployments/azure/README.md)**
 
 #### Quick Start (ACI — fastest today)
 
@@ -336,7 +355,7 @@ az containerapp create \
 | Variable | Description |
 |----------|-------------|
 | `OPENAI_API_KEY` | OpenAI API key (use secret reference) |
-| `OpenAI__Model` | Model name (default: `gpt-4o`) |
+| `OpenAI__Model` | Model name (default: `gpt-5.1`) |
 | `OpenAI__EmbeddingModel` | Embedding model (default: `text-embedding-3-small`) |
 | `VectorStore__PersistPath` | Vector store path (default: `/data/vectors.json`) |
 | `Storage__UploadsPath` | Uploads path (default: `/data/uploads`) |
@@ -417,7 +436,7 @@ dotnet run --project src/ConflictDuplicationDetector.Api
   "OpenAI": {
     "ApiKey": "env:OPENAI_API_KEY",
     "Provider": "OpenAI",
-    "Model": "gpt-4o",
+    "Model": "gpt-5.1",
     "EmbeddingModel": "text-embedding-3-small",
     "AzureEndpoint": null,
     "AzureApiVersion": "2024-02-01",
@@ -447,7 +466,7 @@ Environment variables use double underscores (`__`) for nested configuration (e.
 | `OPENAI_API_KEY` | OpenAI/Azure OpenAI API key (required) | - |
 | `Auth__ApiKey` | Inbound API key for the HTTP API (`X-Api-Key` header) | - |
 | `OpenAI__Provider` | AI provider: `OpenAI` or `AzureOpenAI` | `OpenAI` |
-| `OpenAI__Model` | Chat model for analysis | `gpt-4o` |
+| `OpenAI__Model` | Chat model for analysis | `gpt-5.1` |
 | `OpenAI__EmbeddingModel` | Embedding model | `text-embedding-3-small` |
 | `OpenAI__AzureEndpoint` | Azure OpenAI endpoint URL | `null` |
 | `OpenAI__AzureApiVersion` | Azure OpenAI API version | `2024-02-01` |

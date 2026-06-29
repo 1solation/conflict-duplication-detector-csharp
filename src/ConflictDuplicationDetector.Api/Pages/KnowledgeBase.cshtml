@@ -1,0 +1,172 @@
+@page
+@model KnowledgeBaseModel
+@{
+    ViewData["Title"] = "Knowledge base";
+}
+
+<h1 class="govuk-heading-xl">Knowledge base</h1>
+<p class="govuk-body">View the status, documents and chunks currently loaded in the knowledge base.</p>
+
+@if (!Model.OpenAiConfigured)
+{
+    <div class="govuk-error-summary" role="alert">
+        <h2 class="govuk-heading-m">OpenAI API key is not configured</h2>
+        <p class="govuk-body">Set <code>OPENAI_API_KEY</code> before loading the knowledge base contents.</p>
+    </div>
+}
+
+@if (Model.Dashboard is not null)
+{
+    <div class="app-card">
+        <h2 class="govuk-heading-m">Overview</h2>
+        <p class="govuk-body">
+            <strong class="@Model.ReadinessTagClass">@Model.ReadinessTagText</strong>
+        </p>
+
+        @if (Model.Dashboard.Readiness == KnowledgeBaseReadiness.Ready)
+        {
+            <p class="govuk-body">
+                <strong>@Model.Dashboard.DocumentCount</strong> @(Model.Dashboard.DocumentCount == 1 ? "document" : "documents")
+                ·
+                <strong>@Model.Dashboard.ChunkCount</strong> @(Model.Dashboard.ChunkCount == 1 ? "chunk" : "chunks")
+            </p>
+
+            @if (!string.IsNullOrWhiteSpace(Model.Dashboard.FileTypeBreakdown))
+            {
+                <p class="govuk-body">@Model.Dashboard.FileTypeBreakdown</p>
+            }
+
+            @if (Model.Dashboard.DocumentCount > 0)
+            {
+                <p class="govuk-body">Average @Model.Dashboard.AverageChunksPerDocument.ToString("0.#") chunks per document</p>
+            }
+        }
+        else if (Model.Dashboard.Readiness == KnowledgeBaseReadiness.Empty)
+        {
+            <p class="govuk-body">Upload documents to create the knowledge base.</p>
+            <a class="govuk-button" asp-page="/Upload">Upload documents</a>
+        }
+
+        @if (Model.LastIngest is not null)
+        {
+            <div class="govuk-inset-text">
+                <p class="govuk-body">
+                    <strong>Last updated:</strong>
+                    @Model.LastIngest.CompletedAt.ToUniversalTime().ToString("g") UTC
+                    @if (Model.LastIngest.DocumentsProcessed > 0)
+                    {
+                        <span>· @Model.LastIngest.DocumentsProcessed @(Model.LastIngest.DocumentsProcessed == 1 ? "document" : "documents") added</span>
+                    }
+                </p>
+                <p class="govuk-body">
+                    <a asp-page="/Jobs/Details" asp-route-id="@Model.LastIngest.JobId">View ingest job</a>
+                </p>
+            </div>
+        }
+
+        @if (Model.LastAnalysis is not null)
+        {
+            <div class="govuk-inset-text">
+                <p class="govuk-body">
+                    <strong>Last analysis:</strong>
+                    @Model.LastAnalysis.Duplications @(Model.LastAnalysis.Duplications == 1 ? "duplication" : "duplications"),
+                    @Model.LastAnalysis.Conflicts @(Model.LastAnalysis.Conflicts == 1 ? "conflict" : "conflicts"),
+                    @Model.LastAnalysis.Inconsistencies @(Model.LastAnalysis.Inconsistencies == 1 ? "inconsistency" : "inconsistencies")
+                </p>
+                <p class="govuk-body">
+                    <a asp-page="/Jobs/Details" asp-route-id="@Model.LastAnalysis.JobId">View analysis job</a>
+                </p>
+            </div>
+        }
+    </div>
+}
+
+@if (Model.KnowledgeBase is not null)
+{
+    <dl class="govuk-summary-list">
+        <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">Provider</dt>
+            <dd class="govuk-summary-list__value">@Model.KnowledgeBase.Provider</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">Persist path</dt>
+            <dd class="govuk-summary-list__value"><code>@Model.KnowledgeBase.PersistPath</code></dd>
+        </div>
+    </dl>
+
+    @if (!Model.KnowledgeBase.Exists)
+    {
+        <div class="app-card">
+            <h2 class="govuk-heading-m">No knowledge base found</h2>
+            <p class="govuk-body">Upload documents to create the knowledge base.</p>
+            <a class="govuk-button" asp-page="/Upload">Upload documents</a>
+        </div>
+    }
+    else if (Model.KnowledgeBase.DocumentCount == 0)
+    {
+        <p class="govuk-body">The knowledge base exists, but no chunks are currently loaded.</p>
+    }
+    else
+    {
+        <h2 class="govuk-heading-l">Documents</h2>
+
+        <form method="get" class="app-card">
+            <div class="govuk-form-group">
+                <label class="govuk-label" asp-for="DocumentName">Filter by document name</label>
+                <input class="govuk-input" asp-for="DocumentName" type="text" />
+            </div>
+
+            <div class="govuk-form-group">
+                <label class="govuk-label" asp-for="SortOrder">Sort by upload time</label>
+                <select class="govuk-select" asp-for="SortOrder">
+                    <option value="latest">Latest first</option>
+                    <option value="earliest">Earliest first</option>
+                </select>
+            </div>
+
+            <button class="govuk-button" type="submit">Apply filters</button>
+            @if (Model.HasDocumentFilters)
+            {
+                <a asp-page="/KnowledgeBase">Clear filters</a>
+            }
+        </form>
+
+        @if (Model.DocumentRows.Count == 0)
+        {
+            <p class="govuk-body">No documents match the current filter.</p>
+        }
+        else
+        {
+        <table class="govuk-table">
+            <thead>
+                <tr>
+                    <th scope="col">Document</th>
+                    <th scope="col">Uploaded</th>
+                    <th scope="col">Chunks</th>
+                    <th scope="col">Document ID</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var document in Model.DocumentRows)
+                {
+                    <tr>
+                        <td>@document.DocumentName</td>
+                        <td>
+                            @if (document.UploadedAt is DateTime uploadedAt)
+                            {
+                                <span>@uploadedAt.ToUniversalTime().ToString("g") UTC</span>
+                            }
+                            else
+                            {
+                                <span>-</span>
+                            }
+                        </td>
+                        <td>@document.ChunkCount</td>
+                        <td><code>@document.DocumentId</code></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        }
+    }
+}
