@@ -69,6 +69,8 @@
         break;
 
     case ChatResponse chat:
+        var chatParagraphs = ChatResponseDisplayFormatter.FormatMessage(chat.Message);
+
         <dl class="govuk-summary-list">
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">Intent</dt>
@@ -80,7 +82,10 @@
             </div>
         </dl>
         <div class="app-card">
-            <p class="govuk-body app-pre-wrap">@chat.Message</p>
+            @foreach (var paragraph in chatParagraphs)
+            {
+                <p class="govuk-body">@paragraph</p>
+            }
         </div>
         break;
 
