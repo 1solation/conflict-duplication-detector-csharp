@@ -5,6 +5,7 @@ namespace ConflictDuplicationDetector.Api.Models;
 public static class AnalysisResultDisplayFormatter
 {
     private const string NoConflictingDocumentFound = "No conflicting document found";
+    private const string NoConflictingStatementFound = "No conflicting statement found in provided knowledge base.";
 
     public static string ValueOrDash(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "-" : value;
